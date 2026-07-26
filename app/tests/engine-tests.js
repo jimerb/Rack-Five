@@ -4,7 +4,15 @@
 // overlap rule." These are those tests, plus the seeded-generation and budget
 // invariant checks the rulebook calls out as the things that silently rot.
 
-import { loadStandardRuleset, standardRuleset, effectiveRuleset, labDefaults } from '../src/engine/ruleset.js';
+import {
+  loadStandardRuleset,
+  standardRuleset,
+  effectiveRuleset,
+  labDefaults,
+  labIsModified,
+  sanitizeLabValues,
+  VARIANT_PRESETS
+} from '../src/engine/ruleset.js';
 import { lengthToRank } from '../src/engine/rank.js';
 import { evaluate, cardTotals } from '../src/engine/evaluator.js';
 import { drawTurn, buildBag } from '../src/engine/bag.js';
@@ -57,6 +65,40 @@ export async function run() {
   check('rank0', 'a straight of four still counts', e([1, 2, 3, 4, 0]).smallStraight, 30);
   check('rank0', 'cannot make a Rack Five', e([3, 3, 3, 3, 0]).rackFive, 0);
 
+  /* Tile Value Scoring — the lower section pays letters, qualification is unchanged.
+     Every assertion above doubles as proof the variant-off path did not move. */
+  const TV = effectiveRuleset({
+    enabled: true,
+    values: {
+      ...labDefaults(),
+      variants: { ...labDefaults().variants, tileValueScoring: true }
+    }
+  });
+  const tvals = [10, 8, 6, 4, 2]; // sums to 30
+  const t5 = (ranks) => evaluate(TV, ranks, { tileValues: tvals });
+
+  check('tileValue', 'three of a kind pays 1.0x', t5([5, 5, 5, 1, 2]).threeKind, 30);
+  check('tileValue', 'four of a kind pays 1.1x', t5([5, 5, 5, 5, 2]).fourKind, 33);
+  check('tileValue', 'full house pays 1.2x', t5([4, 4, 4, 2, 2]).fullHouse, 36);
+  check('tileValue', 'small straight pays 1.2x', t5([1, 2, 3, 4, 4]).smallStraight, 36);
+  check('tileValue', 'large straight pays 1.5x', t5([2, 3, 4, 5, 6]).largeStraight, 45);
+  check('tileValue', 'chance pays 0.75x, rounded not floored', t5([6, 1, 1, 1, 1]).chance, 23);
+  check('tileValue', 'rack five pays 1.5x', t5([4, 4, 4, 4, 4]).rackFive, 45);
+  check('tileValue', 'rack five no longer depends on rank', t5([1, 1, 1, 1, 1]).rackFive, 45);
+  check('tileValue', 'qualification is still rank-based', t5([5, 5, 1, 2, 3]).threeKind, 0);
+  check('tileValue', 'a rack five still fails full house', t5([4, 4, 4, 4, 4]).fullHouse, 0);
+  check('tileValue', 'the upper section stays rank-based', t5([3, 3, 3, 1, 2]).threes, 9);
+  check('tileValue', 'payouts are always integers', Number.isInteger(t5([6, 1, 1, 1, 1]).chance), true);
+  check('tileValue', 'empty slots carry no tile value',
+    evaluate(TV, [4, 4, 4, 0, 0], { tileValues: [10, 8, 6, 0, 0] }).threeKind, 24);
+  check('tileValue', 'standard rules are untouched', e([5, 5, 5, 1, 2]).threeKind, 18);
+  check('tileValue', 'a pre-variant ruleset snapshot does not throw',
+    evaluate(
+      { ...R, tileValueScoring: undefined, experimentalVariants: { tileValueScoring: true } },
+      [5, 5, 5, 1, 2],
+      { tileValues: tvals }
+    ).threeKind, 18);
+
   /* Totals and the upper bonus */
   const card = {
     ones: 3, twos: 8, threes: 12, fours: 16, fives: 15, sixes: 12,
@@ -105,6 +147,41 @@ export async function run() {
   check('lab', 'slot count stays locked', wild.slotCount, R.slotCount);
   check('lab', 'rank bands stay locked', wild.rankBands, R.rankBands);
   check('lab', 'a custom ruleset is versioned apart', wild.rulesetVersion !== R.rulesetVersion, true);
+  check('lab', 'a multiplier slider reaches the effective ruleset',
+    effectiveRuleset({ enabled: true, values: { ...labDefaults(), tvChance: 2 } })
+      .tileValueScoring.multipliers.chance, 2);
+  check('lab', 'the variant preset leaves standard defaults alone',
+    labDefaults().upperBonusPoints, R.upperBonusPoints);
+  check('lab', 'defaults alone are not a custom run', labIsModified(labDefaults()), false);
+  check('lab', 'no multiplier on its own makes a run custom',
+    labIsModified({ ...labDefaults(), tvRackFive: labDefaults().tvRackFive }), false);
+  check('lab', 'the upper bonus honours the lab value',
+    cardTotals(effectiveRuleset({ enabled: true, values: { ...labDefaults(), upperBonusPoints: 100 } }),
+      card, 'medium', 0, 0).bonus, 100);
+
+  /* The preset must round-trip, or toggling the variant on and off would strand
+     the player on a Custom run forever. */
+  const D = labDefaults();
+  const presetOn = VARIANT_PRESETS.tileValueScoring(R);
+  const afterOn = { ...D, ...presetOn, variants: { ...D.variants, tileValueScoring: true } };
+  const afterOff = { ...afterOn, upperBonusPoints: D.upperBonusPoints, variants: { ...D.variants } };
+  check('lab', 'the preset raises the upper bonus', presetOn.upperBonusPoints, 100);
+  check('lab', 'turning the variant on makes a run custom', labIsModified(afterOn), true);
+  check('lab', 'turning it back off restores eligibility', labIsModified(afterOff), false);
+
+  /* Persisted Lab blobs from before this variant existed must not strand anyone */
+  const legacy = {
+    ...D,
+    variants: { blindDeclaration: false, chanceScoresTileValue: false, carryOver: false, powerLetters: false }
+  };
+  check('lab', 'a legacy lab blob is reconciled, not stranded',
+    labIsModified(sanitizeLabValues(legacy)), false);
+  check('lab', 'the removed variant key is dropped',
+    'chanceScoresTileValue' in sanitizeLabValues(legacy).variants, false);
+  check('lab', 'the new variant key is restored',
+    sanitizeLabValues(legacy).variants.tileValueScoring, false);
+  check('lab', 'a real saved setting still survives sanitising',
+    sanitizeLabValues({ ...legacy, hintCost: 7 }).hintCost, 7);
 
   return results;
 }

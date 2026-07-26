@@ -75,6 +75,19 @@
     "rackFive": "multiplierTimesRank"
   },
   "rackFiveMultiplier": 10,
+  "tileValueScoring": {
+    "note": "Multipliers on the summed tile value of all five words, applied when the tileValueScoring variant is on. Qualification stays rank-based. Inert while the variant is off.",
+    "upperBonusPoints": 100,
+    "multipliers": {
+      "threeKind": 1.0,
+      "fourKind": 1.1,
+      "fullHouse": 1.2,
+      "smallStraight": 1.2,
+      "largeStraight": 1.5,
+      "chance": 0.75,
+      "rackFive": 1.5
+    }
+  },
   "wordBank": {
     "method": "highest_word_each_turn",
     "hintCost": 3,
@@ -173,8 +186,8 @@
     "rankZero": "never satisfies any pattern requirement"
   },
   "experimentalVariants": {
+    "tileValueScoring": false,
     "blindDeclaration": false,
-    "chanceScoresTileValue": false,
     "carryOver": false,
     "powerLetters": false
   },

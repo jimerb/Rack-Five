@@ -15,7 +15,9 @@ const GROUPS = [
     title: 'Scoring pressure',
     rows: [
       { key: 'upperBonusThreshold', label: 'Upper-bonus threshold', unit: 'pts', min: 30, max: 100, step: 1 },
-      { key: 'upperBonusPoints', label: 'Upper-bonus value', unit: 'pts', min: 0, max: 80, step: 5 },
+      // Headroom well past the 100 that Tile Value Scoring seeds — the whole
+      // point of that variant is that the upper half has to stay worth chasing.
+      { key: 'upperBonusPoints', label: 'Upper-bonus value', unit: 'pts', min: 0, max: 200, step: 5 },
       { key: 'jumboMinimumLength', label: 'Jumbo minimum length', unit: 'letters', min: 7, max: 14, step: 1 },
       { key: 'jumboPointsPerLetter', label: 'Jumbo points per letter', unit: 'pts', min: 1, max: 8, step: 1 }
     ]
@@ -33,8 +35,38 @@ const GROUPS = [
       { key: 'standardSeconds', label: 'Standard turn', unit: 'sec', min: 60, max: 420, step: 10 },
       { key: 'blitzSeconds', label: 'Blitz turn', unit: 'sec', min: 30, max: 240, step: 10 }
     ]
+  },
+  {
+    title: 'Tile Value Scoring',
+    variantGate: 'tileValueScoring',
+    rows: tvRows([
+      ['tvThreeKind', 'Three of a Kind'],
+      ['tvFourKind', 'Four of a Kind'],
+      ['tvFullHouse', 'Full House'],
+      ['tvSmallStraight', 'Small Straight'],
+      ['tvLargeStraight', 'Large Straight'],
+      ['tvChance', 'Chance'],
+      ['tvRackFive', 'Rack Five']
+    ])
   }
 ];
+
+function tvRows(pairs) {
+  return pairs.map(([key, label]) => ({
+    key,
+    label,
+    unit: '× tile value',
+    min: 0,
+    max: 3,
+    step: 0.05,
+    format: (v) => v.toFixed(2)
+  }));
+}
+
+// A 0.05 step can emit 1.7500000000000002, which would then be written to
+// localStorage and poison the whole-object comparison that decides whether a run
+// counts as Custom. Round once, here, on the way in.
+const round2 = (n) => Math.round(n * 100) / 100;
 
 const BANK_METHODS = [
   ['highest_word_each_turn', 'Highest word each turn', 'The standard rule.'],
@@ -44,15 +76,15 @@ const BANK_METHODS = [
 
 const VARIANTS = [
   {
-    key: 'blindDeclaration',
-    name: 'Blind Declaration',
-    desc: 'Name a target category before the rack is revealed. It scores full value; anything else scores half.',
+    key: 'tileValueScoring',
+    name: 'Tile Value Scoring',
+    desc: 'The whole lower section pays a multiple of the summed tile value of all five words instead of the rank sum. Qualification is unchanged — Three of a Kind still needs three words of one rank. The upper section stays rank-based and its bonus rises to 100 to compensate.',
     wired: true
   },
   {
-    key: 'chanceScoresTileValue',
-    name: 'Chance Scores Tile Value',
-    desc: 'Chance pays the summed tile value of all five words instead of the rank sum.',
+    key: 'blindDeclaration',
+    name: 'Blind Declaration',
+    desc: 'Name a target category before the rack is revealed. It scores full value; anything else scores half.',
     wired: true
   },
   {
@@ -109,14 +141,22 @@ export function Lab({ state }) {
             (group) => html`
               <section key=${group.title} class="panel lab-panel">
                 <div class="kicker-sm" style="margin-bottom:12px">${group.title}</div>
+                ${group.variantGate &&
+                !values.variants[group.variantGate] &&
+                html`<p class="body-13" style="margin:-6px 0 12px">
+                  Turn on the Tile Value Scoring variant below to use these.
+                </p>`}
                 <div class="lab-rows">
                   ${group.rows.map((row) => {
-                    const gated = row.gate && !values[row.gate];
+                    const groupOff = group.variantGate && !values.variants[group.variantGate];
+                    const gated = groupOff || (row.gate && !values[row.gate]);
                     return html`
                       <div key=${row.key} class="lab-row">
                         <div class="lab-row-head">
                           <span class="lbl">${row.label}</span>
-                          <strong class="val">${values[row.key]}</strong>
+                          <strong class="val">
+                            ${row.format ? row.format(values[row.key]) : values[row.key]}
+                          </strong>
                           <span class="unit">${row.unit}</span>
                         </div>
                         <input
@@ -127,7 +167,7 @@ export function Lab({ state }) {
                           value=${values[row.key]}
                           disabled=${gated}
                           aria-label=${row.label}
-                          onInput=${(e) => setLabValue(row.key, Number(e.target.value))}
+                          onInput=${(e) => setLabValue(row.key, round2(Number(e.target.value)))}
                         />
                         ${row.gate &&
                         html`

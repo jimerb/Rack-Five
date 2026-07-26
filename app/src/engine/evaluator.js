@@ -11,14 +11,17 @@
 //   Small Straight   4 distinct consecutive non-zero ranks; the fifth word can be anything
 //   Large Straight   5 distinct consecutive non-zero ranks
 //   Rank 0           never satisfies any pattern requirement
+//
+// The Tile Value Scoring variant changes what the lower section *pays*, never what
+// it *requires*. Qualification below is computed once and is identical either way.
 
 import { UPPER_KEYS } from './categories.js';
 
 /**
  * @param ruleset  effective ruleset for the run
  * @param ranks    five ranks, 0 for an empty slot
- * @param options  { tileValues } — only read when the Chance-scores-tile-value
- *                 experimental variant is on
+ * @param options  { tileValues } — the per-slot tile values, read when the
+ *                 Tile Value Scoring experimental variant is on
  */
 export function evaluate(ruleset, ranks, options = {}) {
   const sum = ranks.reduce((a, b) => a + b, 0);
@@ -44,29 +47,34 @@ export function evaluate(ruleset, ranks, options = {}) {
   const lower = ruleset.lowerSection;
   const out = {};
 
+  // Tile Value Scoring. The `&& ruleset.tileValueScoring` half of the guard is
+  // load-bearing: run.ruleset is a snapshot persisted into localStorage, so a
+  // game started before this variant existed resumes with no such block.
+  const variants = ruleset.experimentalVariants || {};
+  const tileValue = (options.tileValues || []).reduce((a, b) => a + b, 0);
+  const tvs = !!(variants.tileValueScoring && ruleset.tileValueScoring);
+  const mult = tvs ? ruleset.tileValueScoring.multipliers : null;
+
+  // Round here and nowhere else. Every consumer — the "+n" previews, the chip
+  // sort, cardTotals, the Blind Declaration halving — assumes an integer.
+  const pay = (key, standard) => (tvs ? Math.round(tileValue * mult[key]) : standard);
+
   for (let rank = 1; rank <= UPPER_KEYS.length; rank++) {
     out[UPPER_KEYS[rank - 1]] = (counts[rank] || 0) * rank;
   }
 
-  out.threeKind = largestGroup >= 3 ? sum : 0;
-  out.fourKind = largestGroup >= 4 ? sum : 0;
-  out.fullHouse =
-    !hasZero &&
-    distinct.length === 2 &&
-    groupSizes.includes(3) &&
-    groupSizes.includes(2)
-      ? lower.fullHouse
-      : 0;
-  out.smallStraight = longestRun >= 4 ? lower.smallStraight : 0;
-  out.largeStraight = distinct.length === 5 && longestRun >= 5 ? lower.largeStraight : 0;
-  out.chance =
-    ruleset.experimentalVariants && ruleset.experimentalVariants.chanceScoresTileValue
-      ? (options.tileValues || []).reduce((a, b) => a + b, 0)
-      : sum;
-  out.rackFive =
-    distinct.length === 1 && counts[distinct[0]] === ranks.length
-      ? ruleset.rackFiveMultiplier * distinct[0]
-      : 0;
+  const isFullHouse =
+    !hasZero && distinct.length === 2 && groupSizes.includes(3) && groupSizes.includes(2);
+  const isRackFive = distinct.length === 1 && counts[distinct[0]] === ranks.length;
+
+  out.threeKind = largestGroup >= 3 ? pay('threeKind', sum) : 0;
+  out.fourKind = largestGroup >= 4 ? pay('fourKind', sum) : 0;
+  out.fullHouse = isFullHouse ? pay('fullHouse', lower.fullHouse) : 0;
+  out.smallStraight = longestRun >= 4 ? pay('smallStraight', lower.smallStraight) : 0;
+  out.largeStraight =
+    distinct.length === 5 && longestRun >= 5 ? pay('largeStraight', lower.largeStraight) : 0;
+  out.chance = pay('chance', sum);
+  out.rackFive = isRackFive ? pay('rackFive', ruleset.rackFiveMultiplier * distinct[0]) : 0;
 
   return out;
 }
@@ -74,8 +82,14 @@ export function evaluate(ruleset, ranks, options = {}) {
 /**
  * Plain-language result line — rulebook §11 requires one after scoring:
  * "Full House: three rank-4 words and two rank-2 words. +25"
+ *
+ * @param options  { tileValueScoring, tileValue } — when the variant is on, the
+ *                 lines that name the rank sum have to name tile value instead.
+ *                 Defaults keep the original three-argument call working.
  */
-export function describeScore(key, ranks, points) {
+export function describeScore(key, ranks, points, options = {}) {
+  const tvs = !!options.tileValueScoring;
+  const tv = options.tileValue || 0;
   const counts = {};
   for (const r of ranks) if (r > 0) counts[r] = (counts[r] || 0) + 1;
   const groups = Object.keys(counts)
@@ -100,15 +114,19 @@ export function describeScore(key, ranks, points) {
         .join('-')}. +${points}`;
     case 'threeKind':
     case 'fourKind':
-      return `${key === 'threeKind' ? 'Three' : 'Four'} of a Kind: ${phrase(
-        groups[0]
-      )}, scoring the sum of all five ranks. +${points}${tail}`;
+      return `${key === 'threeKind' ? 'Three' : 'Four'} of a Kind: ${phrase(groups[0])}, scoring ${
+        tvs ? `on tile value ${tv}` : 'the sum of all five ranks'
+      }. +${points}${tail}`;
     case 'rackFive':
       return points
-        ? `Rack Five: all five words at rank ${groups[0]}. +${points}`
+        ? `Rack Five: all five words at rank ${groups[0]}${
+            tvs ? `, scoring on tile value ${tv}` : ''
+          }. +${points}`
         : `Rack Five taken with a hand that does not qualify. +0${tail}`;
     case 'chance':
-      return `Chance: the sum of all five ranks. +${points}${tail}`;
+      return `Chance: ${
+        tvs ? `tile value ${tv}, at three-quarters` : 'the sum of all five ranks'
+      }. +${points}${tail}`;
     default:
       return points
         ? `${phrase(groups[0] || 1)} counted. +${points}${tail}`

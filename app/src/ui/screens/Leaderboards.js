@@ -114,6 +114,7 @@ function row(b, place, state) {
         </span>
       </span>
       <span class="lb-seed">${b.seed}</span>
+      ${b.variantTag && html`<span class="badge-soon">${b.variantTag}</span>`}
       ${b.isCustom
         ? html`<span class="badge-custom">Custom</span>`
         : html`<span class="badge-soon">Standard</span>`}

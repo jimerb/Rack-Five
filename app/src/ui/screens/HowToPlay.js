@@ -2,9 +2,12 @@ import { html } from '../html.js';
 import { standardRuleset } from '../../engine/ruleset.js';
 import { rankTable } from '../../engine/rank.js';
 
-export function HowToPlay() {
+export function HowToPlay({ state }) {
+  // Deliberately the standard ruleset — this screen documents the base game.
+  // When a variant is on it says so rather than silently rewriting the tables.
   const r = standardRuleset();
   const ranks = rankTable(r);
+  const tileScoring = !!(state && state.lab.values.variants.tileValueScoring);
 
   return html`
     <main class="screen">
@@ -176,6 +179,15 @@ export function HowToPlay() {
 
         <section>
           <h2 class="section-title" style="margin-bottom:10px">The scorecard</h2>
+          ${tileScoring &&
+          html`<div class="lab-warning" style="margin-bottom:10px">
+            <b>Tile Value Scoring is on</b>
+            <span class="body-15">
+              The tables below show standard rules. Under the variant, all seven lower-section
+              categories pay a multiple of the summed tile value of all five words instead, and the
+              upper bonus is worth more. What each category <em>requires</em> is unchanged.
+            </span>
+          </div>`}
           <div class="grid g-300">
             <div class="col" style="gap:5px">
               <div class="kicker-sm" style="margin-bottom:3px">

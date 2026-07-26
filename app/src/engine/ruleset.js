@@ -43,6 +43,15 @@ export function effectiveRuleset(lab) {
     L.refreshCount * L.refreshMaximumTiles
   );
   r.upperBonusPoints = L.upperBonusPoints;
+  r.tileValueScoring.multipliers = {
+    threeKind: L.tvThreeKind,
+    fourKind: L.tvFourKind,
+    fullHouse: L.tvFullHouse,
+    smallStraight: L.tvSmallStraight,
+    largeStraight: L.tvLargeStraight,
+    chance: L.tvChance,
+    rackFive: L.tvRackFive
+  };
   r.jumbo.minimumLength = L.jumboMinimumLength;
   r.jumbo.pointsPerLetter = L.jumboPointsPerLetter;
   r.wordBank.hintCost = L.hintCost;
@@ -71,6 +80,15 @@ export function labDefaults() {
     refreshMaximumTiles: r.refresh.maximumTiles,
     upperBonusThreshold: r.difficulty.medium.upperBonusThreshold,
     upperBonusPoints: r.upperBonusPoints,
+    // These sit at their intended variant values and are inert while the
+    // variant is off, so no multiplier on its own makes a run Custom.
+    tvThreeKind: r.tileValueScoring.multipliers.threeKind,
+    tvFourKind: r.tileValueScoring.multipliers.fourKind,
+    tvFullHouse: r.tileValueScoring.multipliers.fullHouse,
+    tvSmallStraight: r.tileValueScoring.multipliers.smallStraight,
+    tvLargeStraight: r.tileValueScoring.multipliers.largeStraight,
+    tvChance: r.tileValueScoring.multipliers.chance,
+    tvRackFive: r.tileValueScoring.multipliers.rackFive,
     jumboMinimumLength: r.jumbo.minimumLength,
     jumboPointsPerLetter: r.jumbo.pointsPerLetter,
     hintCost: r.wordBank.hintCost,
@@ -80,6 +98,60 @@ export function labDefaults() {
     blitzSeconds: r.timingSeconds.blitz,
     variants: { ...r.experimentalVariants }
   };
+}
+
+/**
+ * Some variants only make sense at a different balance point. Turning one on
+ * seeds those numbers so they stay tunable afterwards; turning it off puts them
+ * back. Each entry maps a variant key to the Lab values it carries with it.
+ *
+ * Tile Value Scoring roughly doubles what the lower section pays, so a 35-point
+ * upper bonus would stop being worth chasing. The seven multipliers need no
+ * entry here — labDefaults() already holds their intended variant values.
+ */
+/** Short names for the experimental variants, for badges and leaderboard rows. */
+export const VARIANT_LABELS = {
+  tileValueScoring: 'Tile Value',
+  blindDeclaration: 'Blind',
+  carryOver: 'Carry-Over',
+  powerLetters: 'Power Letters'
+};
+
+/** A one-line summary of which variants a run used, or null when it used none. */
+export function variantTag(variants) {
+  if (!variants) return null;
+  const on = Object.keys(VARIANT_LABELS).filter((k) => variants[k]);
+  return on.length ? on.map((k) => VARIANT_LABELS[k]).join(' · ') : null;
+}
+
+export const VARIANT_PRESETS = {
+  tileValueScoring: (r) => ({ upperBonusPoints: r.tileValueScoring.upperBonusPoints })
+};
+
+/**
+ * Reconcile a persisted Lab blob with the current shape.
+ *
+ * Two hazards this exists to close. Unknown keys left over from a removed
+ * setting would never match labDefaults(), and `variants` is a nested object —
+ * a plain spread would replace it wholesale, so a blob saved before a variant
+ * was added or removed permanently fails the labIsModified() comparison and
+ * silently locks the player out of standard leaderboards.
+ */
+export function sanitizeLabValues(saved) {
+  const defaults = labDefaults();
+  if (!saved || typeof saved !== 'object') return defaults;
+  const out = { ...defaults };
+  for (const key of Object.keys(defaults)) {
+    if (key === 'variants') continue;
+    if (key in saved && typeof saved[key] === typeof defaults[key]) out[key] = saved[key];
+  }
+  out.variants = { ...defaults.variants };
+  for (const key of Object.keys(defaults.variants)) {
+    if (saved.variants && typeof saved.variants[key] === 'boolean') {
+      out.variants[key] = saved.variants[key];
+    }
+  }
+  return out;
 }
 
 /**

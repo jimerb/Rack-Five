@@ -14,7 +14,9 @@ export function Home({ state }) {
   const ruleset = standardRuleset();
   const standardRuns = state.leaderboard.filter((b) => !b.isCustom);
   const best = standardRuns.reduce((a, b) => (!a || b.score > a.score ? b : a), null);
-  const bestWord = state.leaderboard.reduce(
+  // Standard runs only, like every other stat on this screen — a custom ruleset
+  // can change what a banked word is worth.
+  const bestWord = standardRuns.reduce(
     (a, b) => (b.bestWordValue > (a ? a.bestWordValue : 0) ? b : a),
     null
   );

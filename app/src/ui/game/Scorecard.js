@@ -5,10 +5,11 @@ import {
   confirmScore,
   previewScores,
   currentRanks,
+  currentTileValues,
   totals,
   me
 } from '../../state/store.js';
-import { CATEGORIES, category } from '../../engine/categories.js';
+import { CATEGORIES, category, categoryHelp } from '../../engine/categories.js';
 import { HelpDot } from '../Help.js';
 
 export function Scorecard({ state }) {
@@ -21,6 +22,10 @@ export function Scorecard({ state }) {
   const open = CATEGORIES.filter((c) => player.card[c.key] === null);
   const emptySlots = turn.slots.filter((s) => !s).length;
   const selected = state.helpCat;
+  // Under Tile Value Scoring this number drives every lower-section payout, so
+  // show it. Without it the "+n" previews look arbitrary.
+  const tileScoring = !!run.ruleset.experimentalVariants.tileValueScoring;
+  const tileTotal = tileScoring ? currentTileValues().reduce((a, b) => a + b, 0) : 0;
 
   const chips = open
     .map((c) => ({ c, v: preview[c.key] || 0 }))
@@ -66,7 +71,9 @@ export function Scorecard({ state }) {
         <div class="sc-header-row">
           <span class="sc-title">Scorecard</span>
           <${HelpDot} topic="scorecard" label="How the scorecard works" />
-          <span class="sc-sub tnum">${open.length} open · ranks ${ranks.join(' · ')}</span>
+          <span class="sc-sub tnum">
+            ${open.length} open · ranks ${ranks.join(' · ')}${tileScoring ? ` · tiles ${tileTotal}` : ''}
+          </span>
         </div>
         <div class="sc-header-row">
           <span class="sc-take-label">Take now</span>
@@ -127,7 +134,7 @@ export function Scorecard({ state }) {
           <div class="ft-text">
             <div class="ft-kicker">Not scored yet · step 2 of 2</div>
             <div class="ft-cat">${help.name} — +${preview[help.key] || 0} with this hand</div>
-            <div class="ft-help">${help.help}</div>
+            <div class="ft-help">${categoryHelp(help.key, run.ruleset)}</div>
             <div class="ft-warn">
               Scoring is final and ends the turn.${' '}
               ${emptySlots > 0

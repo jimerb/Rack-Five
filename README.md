@@ -288,7 +288,14 @@ score rank 0." when relevant, and two actions — "Pick another" and **"Confirm 
 gate. A player who cannot find more words must always be able to advance — take 4 in Fours,
 or a zero anywhere. Empty slots score rank 0.
 
-Upper bonus row is a dashed panel showing "N of 63 needed" and the bonus value.
+Upper bonus row is a dashed panel showing "N of 63 needed" and the bonus value. Both numbers
+are read from the effective ruleset, so a Lab change is reflected live.
+
+When the **Tile Value Scoring** variant is on, the header line appends the live summed tile value
+("N open · ranks 1 · 1 · 1 · 1 · 1 · tiles 30") — that number drives every lower-section payout,
+and without it the "+n" previews look arbitrary. The footer help text switches to the tile-value
+wording for the seven lower categories, with the live multiplier interpolated. The row hints do
+not change: they describe *qualification*, which the variant leaves alone.
 
 ### 6. Results
 
@@ -304,7 +311,10 @@ a leaderboard placement card, the completed 13-row scorecard, and a per-turn bre
 Local only. Tabs Easy / Medium / Hard plus a disabled **Friends** tab labelled "Coming soon".
 Timing filter pills (All / Relaxed / Standard / Blitz). Rows show placing, score (26px display
 700 `--t-acc-hi`), timing · date · duration, a metadata line (card / bank / jumbo / upper /
-hints), the seed, and a Standard or **Custom** badge. Custom runs never enter standard boards.
+hints), the seed, a variant tag when the run used any (e.g. "Tile Value"), and a Standard or
+**Custom** badge. Custom runs never enter standard boards. The variant tag matters because all
+custom runs share one section — a tile-value run and a carry-over run are no more comparable to
+each other than either is to a standard run.
 Empty state shows rank chips and "No <Difficulty> runs yet". Tie-break order:
 score → fewer hints → shorter duration → earlier date.
 
@@ -333,11 +343,21 @@ Warning banner: "These controls are for testing game balance. Changing them crea
 and the category definitions are deliberately not exposed — they change what the scorecard
 means."
 
-Four grouped slider panels — Letter pressure (turn budget, refresh count, max tiles per
+Five grouped slider panels — Letter pressure (turn budget, refresh count, max tiles per
 refresh), Scoring pressure (upper-bonus threshold and value, Jumbo minimum length and points
 per letter), Assistance (hint cost, max hints), Pace (standard and blitz turn seconds, plus a
-disabled Short-game row). Then four experimental variant toggles, all **off** by default:
-Blind Declaration, Chance Scores Tile Value, Carry-Over, Power Letters.
+disabled Short-game row), and Tile Value Scoring (a multiplier per lower-section category).
+
+The Tile Value Scoring panel is **gated on its variant toggle** — its seven sliders stay disabled,
+with an explanatory line, until the variant is switched on. Its sliders step by 0.05 and are
+rounded to two decimals on set; an unrounded float would otherwise reach localStorage and
+permanently break the whole-object comparison that decides whether a run counts as Custom.
+
+Then four experimental variant toggles, all **off** by default: Tile Value Scoring, Blind
+Declaration, Carry-Over, Power Letters. Turning Tile Value Scoring on also seeds the upper-bonus
+value to 100 (and restores 35 on the way out), because that variant roughly doubles what the lower
+section pays; a bonus the player has already moved by hand is left alone.
+
 Plus "Reset to Standard Rules", the ruleset version, and a "Modified from standard" badge.
 
 ---
@@ -450,6 +470,12 @@ The prototype's engine is correct and worth porting. Key pieces:
   as a Full House** (only one distinct rank); Small Straight needs four distinct consecutive
   non-zero ranks and the fifth word can be anything; Large Straight needs all five distinct
   and consecutive; **rank 0 never satisfies any pattern**.
+- **Tile Value Scoring** (experimental, off by default). The lower section pays
+  `round(summed tile value × a per-category multiplier)` instead of the rank sum. Qualification is
+  computed once and is identical either way — the variant changes what a category *pays*, never
+  what it *requires*. Rounding happens inside the evaluator, before any consumer sees the number.
+  Rack Five drops its rank term entirely. Because a run snapshots its ruleset into local storage,
+  the evaluator must tolerate a saved ruleset that predates the variant block.
 - **Word Bank.** Only the single highest tile-value word per hand is banked. Blanks are 0.
   Hint costs are deducted once, at purchase; never deduct again at scoring. The bank cannot
   go negative.
@@ -533,9 +559,11 @@ treatment on dark-shot subjects; Sandbar expects a desaturated, lifted "washed" 
 These are deliberate — the mockup proves the flow, not the shipping systems.
 
 1. **Dictionary** is a ~1,300-word demo subset; Strict mode is off by default.
-2. **Gameplay Lab** sliders feed budget, refresh count and cap, hint cost and count, Jumbo
-   length and multiplier, and the turn timers into the live engine. Upper-bonus threshold and
-   value, Word Bank method and the four experimental variants are mock controls only.
+2. **Gameplay Lab** sliders are wired to the live engine — budget, refresh count and cap,
+   upper-bonus threshold and value, Jumbo length and multiplier, hint cost and count, the turn
+   timers, Word Bank method, the tile-value multipliers, and the experimental variant flags all
+   reach `effectiveRuleset()`. Of the four variants, Tile Value Scoring and Blind Declaration
+   change scoring today; Carry-Over and Power Letters are still flags only.
 3. **Leaderboards** are seeded with demo rows and are not persisted.
 4. **Autosave, action log and playtest export** are stubbed. The data shapes are documented
    above and must be built for real.

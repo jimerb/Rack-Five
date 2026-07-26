@@ -18,6 +18,7 @@
 | **Challenge clock pauses** | An opponent could challenge valid words purely to drain a timed player's clock. |
 | **Hint cost fully specified** | "3 points off the Word Bank" left five unanswered questions. |
 | **Intended-category measurement protocol fixed** | V2 said record intent "before each turn," which is ambiguous. If recorded before the rack is revealed it measures blind luck, not manufacturability, which is the opposite of what needs measuring. |
+| **"Chance scores tile value" replaced by "Tile Value Scoring"** (§13) | The narrow version loaded a variable jackpot onto the one category whose job is to be a safety net, and left the other six lower categories still blind to letter difficulty. The replacement moves the whole lower section at once, keeps qualification rank-based, and raises the upper bonus so the upper half stays worth chasing. Base rules are unchanged. |
 
 ---
 
@@ -196,9 +197,9 @@ The **first** word of 9 or more letters you play all game earns a one-time bonus
 Jumbo occupies no category and requires no particular turn. It is the spectacular-moment reward, nothing more.
 
 ### On rewarding hard words
-A fair criticism of the design: Chance scores the sum of ranks, so FINISHED and QUIXOTRY are worth exactly the same there despite one being far harder to find. Complexity currently has only one home, the Word Bank, and only for one word per hand.
+A fair criticism of the design: the lower section scores on ranks, so FINISHED and QUIXOTRY are worth exactly the same there despite one being far harder to find. Complexity has only one home in the base game, the Word Bank, and only for one word per hand.
 
-I am leaving Chance as a rank category anyway. Chance is the pressure valve that lets a ruined hand score something, and giving it a large variable payout turns the safety net into a jackpot. If complexity needs a louder reward, the variant to test is listed in section 12, not a change to Chance.
+The base rules are unchanged on this point. The answer, if the criticism proves right in testing, is the **Tile Value Scoring** variant in section 13, which moves the whole lower section onto tile value at once rather than singling out Chance. Changing Chance alone was the earlier proposal and it was the wrong shape: Chance is the pressure valve that lets a ruined hand score something, and a large variable payout there turns the safety net into a jackpot.
 
 ---
 
@@ -216,6 +217,8 @@ I am leaving Chance as a rank category anyway. Chance is the pressure valve that
 | Sixes | 8+ letter words | 6 per word |
 
 **Upper Bonus:** 63 or more in the upper section, add **+35**.
+
+The bonus is worth 35 because the lower section pays in rank sums. Anything that inflates the lower section has to raise this number with it or the upper half becomes a dump zone — that is why the Tile Value Scoring variant in section 13 carries its own bonus value.
 
 Treat 63 as a placeholder, and expect to need **three different thresholds**, one per difficulty. Yahtzee's number assumes all six faces are equally likely. Here the upper section has a difficulty ramp: Ones through Threes are nearly free and Sixes is a wall, so in practice the bonus asks "can you produce three 8-letter words." Tune from at least 30 complete games per difficulty, targeting a 25 to 40 percent earn rate for competent players.
 
@@ -253,7 +256,7 @@ These belong in the evaluator and in the printed rules. Leaving them implicit gu
 | Five 7-letter words | 35 | 50 | all |
 | Five 8+ letter words | 40 | 60 | Easy, Medium |
 
-One line to remember: **Rack Five scores ten times its rank.**
+One line to remember: **Rack Five scores ten times its rank.** (Under the Tile Value Scoring variant it scores on tile value instead and rank stops mattering — see section 13.)
 
 A rank-1 Rack Five pays 10, which makes the category a soft dumping ground on a ruined turn rather than a jackpot to farm. No repeat bonus. Revisit only if testing proves rank 5 and 6 Rack Fives are genuinely rare, and even then restrict the bonus to those ranks.
 
@@ -534,7 +537,27 @@ Prototype switches. None ship in phase 1.
 
 **Blind Declaration.** Name your target category before the rack is revealed. Score it at full value, any other category at half. This attacks the manufacturability problem head on by restoring genuine uncertainty. The first variant I would test.
 
-**Chance scores tile value.** Chance pays the summed tile value of all five words instead of the rank sum, turning it into the go-for-broke slot where a nasty word actually pays. Not in the base game because Chance is the safety net and a large variable payout undermines that job, but this is the direct answer if complexity needs a louder home than the Word Bank gives it.
+**Tile Value Scoring.** The whole lower section pays a multiple of the summed tile value of all five words instead of the rank sum. **Qualification is untouched** — Three of a Kind still requires three words of one rank, a Rack Five still fails Full House, rank 0 still breaks every pattern. Only the payout changes.
+
+| Category | Base rules | Under the variant |
+|---|---|---|
+| Three of a Kind | sum of ranks | tile value x 1.00 |
+| Four of a Kind | sum of ranks | tile value x 1.10 |
+| Full House | 25 | tile value x 1.20 |
+| Small Straight | 30 | tile value x 1.20 |
+| Large Straight | 40 | tile value x 1.50 |
+| Chance | sum of ranks | tile value x 0.75 |
+| Rack Five | 10 x rank | tile value x 1.50 |
+
+This replaces the narrower "Chance scores tile value" switch from earlier drafts. Singling out Chance was the wrong shape — it loaded a jackpot onto the one category whose job is to be a safety net. Chance sits below 1.0 here for the same reason.
+
+Three consequences worth stating before anyone tests it:
+
+- **Rack Five stops caring about rank.** A rank-4 Rack Five of hard words beats a rank-6 of easy ones. Since you only ever get one, deciding when to spend it becomes the interesting question rather than simply waiting for rank 6.
+- **The upper bonus has to grow.** The lower section roughly doubles, so 35 stops being worth chasing. The variant carries **100**, which makes it the largest single prize on the card and roughly the value of a strong Rack Five. The intended division of labour is *upper section rewards length, lower section rewards letters.*
+- **It compresses the spread.** Five 3-letter words score about 7 in ranks but about 30 in tiles; a hand of five 8-letter words scores 28 in ranks but only about 65 in tiles. Best-to-worst falls from roughly 4x to roughly 2x. The length gradient moves out of the lower section and into the upper half, where it was always steeper. This is the main thing to measure.
+
+Every multiplier and the bonus value are Gameplay Lab sliders, because none of these numbers are known to be right yet. Blanks are worth 0 tile value, so they get materially worse under this variant — that is intended, but it is a difficulty increase on top of the scoring change and should not be attributed to the multipliers.
 
 **Carry-Over.** Keep up to 5 unspent tiles into the next turn, letting you stockpile toward a Jumbo. Excluded because it lowers the risk of long-word attempts and skews the next rack's distribution.
 

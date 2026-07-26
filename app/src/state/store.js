@@ -8,7 +8,10 @@ import {
   standardRuleset,
   effectiveRuleset,
   labDefaults,
-  labIsModified
+  labIsModified,
+  sanitizeLabValues,
+  variantTag,
+  VARIANT_PRESETS
 } from '../engine/ruleset.js';
 import { drawTurn } from '../engine/bag.js';
 import { lengthToRank } from '../engine/rank.js';
@@ -79,7 +82,9 @@ function freshSetup() {
 
 export function initStore() {
   const settings = { ...DEFAULT_SETTINGS, ...(read(KEYS.settings) || {}) };
-  const labValues = { ...labDefaults(), ...(read(KEYS.lab) || {}) };
+  // Reconciled, not spread: `variants` is nested, so a plain spread would let a
+  // blob saved under an older variant list strand the player on a Custom run.
+  const labValues = sanitizeLabValues(read(KEYS.lab));
   const saved = read(KEYS.save);
   const leaderboard = read(KEYS.leaderboard) || [];
 
@@ -330,10 +335,36 @@ export function setLabValue(key, value) {
 }
 
 export function setLabVariant(key, value) {
-  const values = { ...state.lab.values, variants: { ...state.lab.values.variants, [key]: value } };
+  const current = state.lab.values;
+  const values = { ...current, variants: { ...current.variants, [key]: value } };
+
+  // Some variants only make sense at a different balance point. Carry those
+  // numbers in and out with the toggle, but never overwrite a slider the player
+  // has already moved by hand — and put them back on the way out, or toggling
+  // the variant on and off again would leave the run flagged Custom forever.
+  const preset = VARIANT_PRESETS[key];
+  const moved = [];
+  if (preset) {
+    const seeded = preset(standardRuleset());
+    const defaults = labDefaults();
+    for (const k of Object.keys(seeded)) {
+      if (value && current[k] === defaults[k] && seeded[k] !== defaults[k]) {
+        values[k] = seeded[k];
+        moved.push(k);
+      } else if (!value && current[k] === seeded[k] && seeded[k] !== defaults[k]) {
+        values[k] = defaults[k];
+        moved.push(k);
+      }
+    }
+  }
+
   const lab = { enabled: labIsModified(values), values };
   set({ lab });
   write(KEYS.lab, values);
+
+  if (moved.includes('upperBonusPoints')) {
+    toast(`Upper bonus ${value ? 'raised' : 'restored'} to ${values.upperBonusPoints} to match.`);
+  }
 }
 
 export function resetLab() {
@@ -901,7 +932,10 @@ export function scoreCategory(key) {
     emptySlots: slots.filter((s) => !s).length,
     durationSeconds: Math.round((Date.now() - t.startedAt) / 1000),
     feeling: null,
-    resultLine: describeScore(key, ranks, points)
+    resultLine: describeScore(key, ranks, points, {
+      tileValueScoring: !!ruleset.experimentalVariants.tileValueScoring,
+      tileValue: filled.reduce((a, s) => a + s.tileValue, 0)
+    })
   };
 
   const nextRun = {
@@ -1009,7 +1043,10 @@ function recordLeaderboardEntry(run, t) {
     hints: player.hintsUsed,
     durationMinutes: Math.max(1, Math.round((run.completedAt - run.startedAt) / 60000)),
     interrupted: !!run.interrupted,
-    isCustom: !!run.isCustom
+    isCustom: !!run.isCustom,
+    // Custom runs share one board, so say which rules were in play — a tile-value
+    // run and a carry-over run are not comparable to each other either.
+    variantTag: variantTag(run.ruleset.experimentalVariants)
   };
   const leaderboard = state.leaderboard.concat([entry]);
   set({ leaderboard });

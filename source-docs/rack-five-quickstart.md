@@ -80,7 +80,7 @@ Your final score has three parts:
 | Fives | 7 letters | 5 |
 | Sixes | 8+ letters | 6 |
 
-Score 63+ across the upper section for a **+35 bonus**.
+Score 63+ across the upper section for a **+35 bonus**. (The Tile Value Scoring variant raises this — see below.)
 
 **Lower Section**
 
@@ -98,6 +98,30 @@ Score 63+ across the upper section for a **+35 bonus**.
 - A Rack Five does *not* count for Full House (only one distinct rank, not two).
 - Rank 0 (an empty slot) never counts toward any pattern — no straights, no sets, no full house.
 - If nothing fits, take a zero somewhere. That's part of the game.
+
+---
+
+## Optional: Tile Value Scoring
+
+An experimental variant you can switch on in the Gameplay Lab. It answers the complaint that the lower section can't tell QUIZZED from TEAPOTS — both are 7 letters, so both are rank 5, so both score the same.
+
+With it on, the seven lower categories pay a multiple of the **summed tile value of all five words** instead of the rank sum:
+
+| Category | Normally | With the variant |
+|---|---|---:|
+| Three of a Kind | Sum of ranks | tile value × 1.00 |
+| Four of a Kind | Sum of ranks | tile value × 1.10 |
+| Full House | 25 | tile value × 1.20 |
+| Small Straight | 30 | tile value × 1.20 |
+| Large Straight | 40 | tile value × 1.50 |
+| Chance | Sum of ranks | tile value × 0.75 |
+| Rack Five | 10 × rank | tile value × 1.50 |
+
+**What each category requires does not change.** Three of a Kind still needs three words of one rank; a Rack Five still doesn't count as a Full House. Only the payout moves.
+
+Two things follow. Rack Five stops caring about rank — five hard 3-letter words can beat five easy 8-letter ones — so choosing when to spend your one Rack Five gets more interesting. And because the lower section roughly doubles, the upper bonus rises to **+100**, which makes the upper half something you have to chase rather than something you can dump. Short version: **the upper section rewards length, the lower section rewards letters.**
+
+Every multiplier is a slider, and runs using the variant are marked Custom and kept off the standard leaderboards.
 
 ---
 
