@@ -70,7 +70,7 @@ export const DEFAULT_SETTINGS = {
 function freshSetup() {
   return {
     difficulty: 'medium',
-    timing: 'standard',
+    timing: 'relaxed',
     gameLength: 'full',
     seed: newSeed(),
     seedInput: '',

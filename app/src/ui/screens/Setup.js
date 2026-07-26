@@ -11,8 +11,8 @@ import { effectiveRuleset } from '../../engine/ruleset.js';
 import { HelpDot } from '../Help.js';
 
 const TIMINGS = [
-  { key: 'relaxed', name: 'Relaxed', value: 'Untimed', blurb: 'Solo puzzle pace, good for learning' },
-  { key: 'standard', name: 'Standard', value: '3 minutes per turn', blurb: 'The normal game', tag: 'Default' },
+  { key: 'relaxed', name: 'Relaxed', value: 'Untimed', blurb: 'Solo puzzle pace, good for learning', tag: 'Default' },
+  { key: 'standard', name: 'Standard', value: '3 minutes per turn', blurb: 'The normal game' },
   { key: 'blitz', name: 'Blitz', value: '90 seconds per turn', blurb: 'For experienced word players' }
 ];
 

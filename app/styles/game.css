@@ -648,6 +648,27 @@
   font-size: 13px;
 }
 .sc-bonus .amt { margin-left: auto; font-family: var(--t-fd); font-weight: var(--t-fwd); color: var(--t-acc-hi); }
+/* Solid border and a bigger figure than the bonus row — this is the running
+   headline number, not a progress note. */
+.sc-total {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: var(--t-rad-sm);
+  border: 1px solid var(--t-line-2);
+  background: var(--t-panel-2, var(--t-inset));
+  font-size: 14px;
+  font-weight: 600;
+}
+.sc-total .amt {
+  margin-left: auto;
+  font-family: var(--t-fd);
+  font-weight: var(--t-fwd);
+  font-size: 18px;
+  color: var(--t-acc-hi);
+}
 .sc-footer {
   flex: none;
   display: flex;

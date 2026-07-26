@@ -43,6 +43,27 @@ function scoredTip(run, c) {
   };
 }
 
+/**
+ * What "Total" means here on purpose: only what is already locked in on the
+ * card (upper + bonus + lower). Word Bank and Jumbo are real points but they
+ * are not scorecard categories — they already have their own live figures in
+ * the HUD, and folding them in here would make this number disagree with the
+ * one the player is actually watching tick up during the turn.
+ */
+function totalTip(t) {
+  return {
+    title: 'Total',
+    body: 'The sum of every category scored so far, plus the upper bonus if earned. Open categories are not guesses — they are left out until you actually score them.',
+    lines: [
+      ['Upper (scored so far)', t.upper],
+      ['Upper bonus', t.bonus],
+      ['Lower (scored so far)', t.lower],
+      ['Total', t.scorecard]
+    ],
+    note: 'Word Bank and Jumbo are shown separately in the header — they are not scorecard categories.'
+  };
+}
+
 function bonusTip(run, t) {
   const prize = run.ruleset.upperBonusPoints;
   const earned = t.bonus > 0;
@@ -191,6 +212,10 @@ export function Scorecard({ state }) {
           <div>
             <div class="sc-section-title">Lower section</div>
             <div class="sc-rows">${CATEGORIES.filter((c) => c.section === 'lower').map(rowFor)}</div>
+            <div class="sc-total" ...${tipProps(totalTip(t))}>
+              <span>Total</span>
+              <span class="amt tnum">${t.scorecard}</span>
+            </div>
           </div>
         </div>
       </div>

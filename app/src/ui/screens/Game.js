@@ -183,7 +183,7 @@ export function Game({ state }) {
                           buildRank === r.rank && turn.build.length >= 3 && 'is-live'
                         )}
                       >
-                        <span class="l">${r.length}</span>
+                        <span class="l">L${r.length}</span>
                         <span class="r">${r.rank}</span>
                       </span>
                     `
