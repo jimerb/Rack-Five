@@ -19,6 +19,30 @@ import { HelpDot, tipProps } from '../Help.js';
  * for it — which matters most under Tile Value Scoring, where the bonus is
  * seeded much higher to keep the upper half worth chasing.
  */
+/**
+ * The tooltip for a scored row has to explain the turn that actually scored it,
+ * not the hand currently on the board — those are almost always different
+ * hands. History keeps exactly what is needed: the five ranks and tile values
+ * from that turn, and the final points actually awarded (which can differ from
+ * a plain re-evaluation when Blind Declaration halved it).
+ */
+function scoredTip(run, c) {
+  const record = run.history.find((h) => h.category === c.key);
+  if (!record) return null;
+  const explained = explainScore(run.ruleset, c.key, record.ranks, record.tileValues);
+  const lines = explained.lines.slice();
+  const last = lines.length - 1;
+  const recomputed = lines[last][1];
+  lines[last] = [lines[last][0], record.categoryPoints];
+  return {
+    title: c.name,
+    lines,
+    note: record.halved
+      ? `Blind Declaration halved this — it would have scored ${recomputed} at full value.`
+      : explained.note
+  };
+}
+
 function bonusTip(run, t) {
   const prize = run.ruleset.upperBonusPoints;
   const earned = t.bonus > 0;
@@ -64,11 +88,21 @@ export function Scorecard({ state }) {
     const value = scored ? player.card[c.key] : preview[c.key] || 0;
     const qualifies = !scored && value > 0;
     const isSelected = selected === c.key && !scored;
-    // Show the working behind the "+n". A scored row gets none: its number is
-    // history, and explaining it with the hand now on the table would be a lie.
-    const tip = scored
-      ? null
-      : { title: c.name, ...explainScore(run.ruleset, c.key, ranks, tileVals) };
+    // Upper-section rows are plain arithmetic (points per word × word count) —
+    // a tooltip on every one of them just means the whole section is a minefield
+    // of popups. Only the upper bonus, which is genuinely non-obvious, gets one.
+    // Lower-section rows get the working behind the number, but only when there
+    // is a number worth explaining: a category that has been scored, or one
+    // this hand could score right now. A hand that can't reach it yet ("+0")
+    // has nothing to show.
+    const tip =
+      c.section !== 'lower'
+        ? null
+        : scored
+          ? scoredTip(run, c)
+          : value > 0
+            ? { title: c.name, ...explainScore(run.ruleset, c.key, ranks, tileVals) }
+            : null;
     return html`
       <button
         key=${c.key}
