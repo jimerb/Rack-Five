@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en" data-theme="feltwork">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rack Five — engine tests</title>
+<link rel="stylesheet" href="../styles/tokens.css">
+<link rel="stylesheet" href="../styles/base.css">
+<style>
+  body { background: var(--t-bg); background-image: var(--t-bg-grad); }
+  main { max-width: 860px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-family: var(--t-fd); font-weight: var(--t-fwd); font-size: 30px; margin: 0 0 6px; }
+  .summary { font-size: 17px; margin: 16px 0 24px; padding: 14px 18px; border-radius: var(--t-rad); }
+  .summary.pass { background: var(--t-acc-soft); border: 1px solid var(--t-acc); color: var(--t-acc-hi); }
+  .summary.fail { background: var(--t-warn-soft); border: 1px solid var(--t-warn); color: var(--t-warn); }
+  .group { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+           color: var(--t-acc); margin: 22px 0 8px; }
+  .row { display: flex; gap: 10px; align-items: baseline; padding: 7px 12px; border-radius: var(--t-rad-sm);
+         background: var(--t-panel); margin-bottom: 4px; font-size: 14px; }
+  .row .mark { width: 18px; }
+  .row.ok .mark { color: var(--t-ok); }
+  .row.bad { background: var(--t-warn-soft); }
+  .row.bad .mark { color: var(--t-warn); }
+  .detail { margin-left: auto; font-size: 12px; color: var(--t-muted); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main id="out">
+  <h1>Rack Five — engine tests</h1>
+  <p style="color:var(--t-muted);margin:0">Rank conversion, every scorecard category, the overlap rules,
+    seeded generation, the budget invariant and the Lab's structural safeguards.</p>
+  <p id="status" style="color:var(--t-muted)">Running…</p>
+</main>
+<script type="module">
+  import { run, summarise } from './engine-tests.js';
+  const out = document.getElementById('out');
+  const status = document.getElementById('status');
+  try {
+    const results = await run();
+    const { total, passed, failed } = summarise(results);
+    status.remove();
+    const summary = document.createElement('div');
+    summary.className = 'summary ' + (failed.length ? 'fail' : 'pass');
+    summary.textContent = failed.length
+      ? `${failed.length} of ${total} checks failed.`
+      : `All ${passed} checks passed.`;
+    out.appendChild(summary);
+    let group = null;
+    for (const r of results) {
+      if (r.group !== group) {
+        group = r.group;
+        const h = document.createElement('div');
+        h.className = 'group';
+        h.textContent = group;
+        out.appendChild(h);
+      }
+      const row = document.createElement('div');
+      row.className = 'row ' + (r.ok ? 'ok' : 'bad');
+      row.innerHTML =
+        `<span class="mark">${r.ok ? '✓' : '✕'}</span><span>${r.name}</span>` +
+        (r.ok ? '' : `<span class="detail">got ${JSON.stringify(r.actual)}, expected ${JSON.stringify(r.expected)}</span>`);
+      out.appendChild(row);
+    }
+  } catch (err) {
+    status.textContent = 'Tests could not run: ' + err.message;
+    console.error(err);
+  }
+</script>
+</body>
+</html>

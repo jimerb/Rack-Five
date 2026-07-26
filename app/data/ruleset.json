@@ -1,0 +1,190 @@
+{
+  "rulesetVersion": "phase1.0",
+  "rngVersion": "mulberry32-fnv1a-v1",
+  "slotCount": 5,
+  "minimumWordLength": 3,
+  "rankBands": [
+    {
+      "minimumLength": 3,
+      "maximumLength": 3,
+      "rank": 1
+    },
+    {
+      "minimumLength": 4,
+      "maximumLength": 4,
+      "rank": 2
+    },
+    {
+      "minimumLength": 5,
+      "maximumLength": 5,
+      "rank": 3
+    },
+    {
+      "minimumLength": 6,
+      "maximumLength": 6,
+      "rank": 4
+    },
+    {
+      "minimumLength": 7,
+      "maximumLength": 7,
+      "rank": 5
+    },
+    {
+      "minimumLength": 8,
+      "maximumLength": null,
+      "rank": 6
+    }
+  ],
+  "difficulty": {
+    "easy": {
+      "budget": 45,
+      "upperBonusThreshold": 63,
+      "blurb": "More letters, more possible solutions"
+    },
+    "medium": {
+      "budget": 40,
+      "upperBonusThreshold": 63,
+      "blurb": "The standard game"
+    },
+    "hard": {
+      "budget": 35,
+      "upperBonusThreshold": 63,
+      "blurb": "Fewer letters, tighter decisions"
+    }
+  },
+  "refresh": {
+    "count": 2,
+    "maximumTiles": 10,
+    "commitsPlacedWords": true,
+    "replacementQueueLength": 20
+  },
+  "timingSeconds": {
+    "relaxed": null,
+    "standard": 180,
+    "blitz": 90,
+    "warningThreshold": 30
+  },
+  "upperBonusPoints": 35,
+  "lowerSection": {
+    "threeOfAKind": "sumOfRanks",
+    "fourOfAKind": "sumOfRanks",
+    "fullHouse": 25,
+    "smallStraight": 30,
+    "largeStraight": 40,
+    "chance": "sumOfRanks",
+    "rackFive": "multiplierTimesRank"
+  },
+  "rackFiveMultiplier": 10,
+  "wordBank": {
+    "method": "highest_word_each_turn",
+    "hintCost": 3,
+    "maximumHints": 2,
+    "canGoNegative": false
+  },
+  "jumbo": {
+    "minimumLength": 9,
+    "pointsPerLetter": 3,
+    "maximumAwardsPerGame": 1
+  },
+  "gameLength": {
+    "full": 13,
+    "short": 6,
+    "shortEnabled": false
+  },
+  "tileDistribution": {
+    "id": "english-100-prototype",
+    "version": "1.0",
+    "note": "Familiar 100-tile English set, fine for prototyping. A shipped product needs its own approved distribution and value table.",
+    "counts": {
+      "A": 9,
+      "B": 2,
+      "C": 2,
+      "D": 4,
+      "E": 12,
+      "F": 2,
+      "G": 3,
+      "H": 2,
+      "I": 9,
+      "J": 1,
+      "K": 1,
+      "L": 4,
+      "M": 2,
+      "N": 6,
+      "O": 8,
+      "P": 2,
+      "Q": 1,
+      "R": 6,
+      "S": 4,
+      "T": 6,
+      "U": 4,
+      "V": 2,
+      "W": 2,
+      "X": 1,
+      "Y": 2,
+      "Z": 1,
+      "BLANK": 2
+    },
+    "values": {
+      "A": 1,
+      "B": 3,
+      "C": 3,
+      "D": 2,
+      "E": 1,
+      "F": 4,
+      "G": 2,
+      "H": 4,
+      "I": 1,
+      "J": 8,
+      "K": 5,
+      "L": 1,
+      "M": 3,
+      "N": 1,
+      "O": 1,
+      "P": 3,
+      "Q": 10,
+      "R": 1,
+      "S": 1,
+      "T": 1,
+      "U": 1,
+      "V": 4,
+      "W": 4,
+      "X": 8,
+      "Y": 4,
+      "Z": 10,
+      "BLANK": 0
+    }
+  },
+  "dictionary": {
+    "id": "demo-subset",
+    "version": "0.1",
+    "strictByDefault": false,
+    "candidates": [
+      "TWL06",
+      "SOWPODS",
+      "ENABLE"
+    ]
+  },
+  "qualification": {
+    "threeOfAKind": "at least 3 words of one rank; Four of a Kind and Rack Five qualify",
+    "fourOfAKind": "at least 4 words of one rank; Rack Five qualifies",
+    "fullHouse": "exactly two distinct ranks in a 3-and-2 split; Rack Five does NOT qualify",
+    "smallStraight": "4 distinct consecutive non-zero ranks; the fifth word can be anything",
+    "largeStraight": "5 distinct consecutive non-zero ranks",
+    "rankZero": "never satisfies any pattern requirement"
+  },
+  "experimentalVariants": {
+    "blindDeclaration": false,
+    "chanceScoresTileValue": false,
+    "carryOver": false,
+    "powerLetters": false
+  },
+  "structuralSafeguards": {
+    "note": "These change what the scorecard means and must not be exposed in the Gameplay Lab.",
+    "locked": [
+      "slotCount",
+      "rankBands",
+      "categoryDefinitions",
+      "numberOfRanks"
+    ]
+  }
+}

@@ -1,0 +1,230 @@
+import { html, cx } from '../html.js';
+import { go, setLabValue, setLabVariant, resetLab } from '../../state/store.js';
+import { standardRuleset } from '../../engine/ruleset.js';
+
+const GROUPS = [
+  {
+    title: 'Letter pressure',
+    rows: [
+      { key: 'budget', label: 'Turn budget (overrides difficulty)', unit: 'letters', min: 25, max: 60, step: 1, gate: 'budgetOverride' },
+      { key: 'refreshCount', label: 'Refreshes per turn', unit: '', min: 0, max: 4, step: 1 },
+      { key: 'refreshMaximumTiles', label: 'Max tiles per refresh', unit: 'tiles', min: 1, max: 20, step: 1 }
+    ]
+  },
+  {
+    title: 'Scoring pressure',
+    rows: [
+      { key: 'upperBonusThreshold', label: 'Upper-bonus threshold', unit: 'pts', min: 30, max: 100, step: 1 },
+      { key: 'upperBonusPoints', label: 'Upper-bonus value', unit: 'pts', min: 0, max: 80, step: 5 },
+      { key: 'jumboMinimumLength', label: 'Jumbo minimum length', unit: 'letters', min: 7, max: 14, step: 1 },
+      { key: 'jumboPointsPerLetter', label: 'Jumbo points per letter', unit: 'pts', min: 1, max: 8, step: 1 }
+    ]
+  },
+  {
+    title: 'Assistance',
+    rows: [
+      { key: 'hintCost', label: 'Hint cost', unit: 'pts', min: 0, max: 15, step: 1 },
+      { key: 'maximumHints', label: 'Max hints per game', unit: '', min: 0, max: 6, step: 1 }
+    ]
+  },
+  {
+    title: 'Pace',
+    rows: [
+      { key: 'standardSeconds', label: 'Standard turn', unit: 'sec', min: 60, max: 420, step: 10 },
+      { key: 'blitzSeconds', label: 'Blitz turn', unit: 'sec', min: 30, max: 240, step: 10 }
+    ]
+  }
+];
+
+const BANK_METHODS = [
+  ['highest_word_each_turn', 'Highest word each turn', 'The standard rule.'],
+  ['top_two_half_value', 'Two best at half value', 'Rulebook §5, first ranked fix if hands read as “one good word and four chores”.'],
+  ['highest_capped_20', 'Highest word, capped at 20', 'Rulebook §5, second ranked fix.']
+];
+
+const VARIANTS = [
+  {
+    key: 'blindDeclaration',
+    name: 'Blind Declaration',
+    desc: 'Name a target category before the rack is revealed. It scores full value; anything else scores half.',
+    wired: true
+  },
+  {
+    key: 'chanceScoresTileValue',
+    name: 'Chance Scores Tile Value',
+    desc: 'Chance pays the summed tile value of all five words instead of the rank sum.',
+    wired: true
+  },
+  {
+    key: 'carryOver',
+    name: 'Carry-Over',
+    desc: 'Keep up to five unspent tiles into the next turn. Skews the next rack’s distribution — that is the point of testing it.',
+    wired: true
+  },
+  {
+    key: 'powerLetters',
+    name: 'Power Letters',
+    desc: 'The first word each turn containing a real J, Q, X or Z earns one free single-tile swap. The budget does not change.',
+    wired: true
+  }
+];
+
+export function Lab({ state }) {
+  const values = state.lab.values;
+  const standard = standardRuleset();
+
+  return html`
+    <main class="screen">
+      <div class="screen-col w-880" style="gap:24px">
+        <div>
+          <div class="row" style="gap:10px">
+            <button class="link-action" type="button" onClick=${() => go('settings')}>← Settings</button>
+            <span class="dimmer" style="font-size:13px">/ Advanced</span>
+          </div>
+          <h1 class="page-title" style="margin-top:6px">Gameplay Lab</h1>
+        </div>
+
+        <div class="lab-warning">
+          <b>Testing only</b>
+          <span class="body-15">
+            These controls are for testing game balance. Changing them creates a${' '}
+            <strong>Custom Run</strong> and removes the score from standard leaderboards. Slot count,
+            the rank bands and the category definitions are deliberately not exposed — they change
+            what the scorecard means.
+          </span>
+        </div>
+
+        <div class="row" style="gap:12px">
+          <span class="body-13">
+            Ruleset <strong style="color:var(--t-text)">${standard.rulesetVersion}</strong>
+          </span>
+          ${state.lab.enabled && html`<span class="badge-custom">Modified from standard</span>`}
+          <button class="btn-ghost sm spacer" type="button" onClick=${resetLab}>
+            Reset to Standard Rules
+          </button>
+        </div>
+
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">
+          ${GROUPS.map(
+            (group) => html`
+              <section key=${group.title} class="panel lab-panel">
+                <div class="kicker-sm" style="margin-bottom:12px">${group.title}</div>
+                <div class="lab-rows">
+                  ${group.rows.map((row) => {
+                    const gated = row.gate && !values[row.gate];
+                    return html`
+                      <div key=${row.key} class="lab-row">
+                        <div class="lab-row-head">
+                          <span class="lbl">${row.label}</span>
+                          <strong class="val">${values[row.key]}</strong>
+                          <span class="unit">${row.unit}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min=${row.min}
+                          max=${row.max}
+                          step=${row.step}
+                          value=${values[row.key]}
+                          disabled=${gated}
+                          aria-label=${row.label}
+                          onInput=${(e) => setLabValue(row.key, Number(e.target.value))}
+                        />
+                        ${row.gate &&
+                        html`
+                          <label class="row" style="gap:8px;margin-top:6px;font-size:12px;color:var(--t-muted)">
+                            <input
+                              type="checkbox"
+                              checked=${!!values[row.gate]}
+                              onChange=${(e) => setLabValue(row.gate, e.target.checked)}
+                            />
+                            Override every difficulty with this budget
+                          </label>
+                        `}
+                      </div>
+                    `;
+                  })}
+                  ${group.title === 'Pace' &&
+                  html`<div class="lab-soon">
+                    Short game · 6 rounds
+                    <span class="spacer" style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">
+                      Coming soon
+                    </span>
+                  </div>`}
+                </div>
+              </section>
+            `
+          )}
+        </div>
+
+        <section class="panel lab-panel">
+          <div class="kicker-sm" style="margin-bottom:12px">Word Bank method</div>
+          <div class="col" style="gap:7px">
+            ${BANK_METHODS.map(
+              ([key, name, desc]) => html`
+                <button
+                  key=${key}
+                  type="button"
+                  class=${cx('dict-card', values.wordBankMethod === key && 'is-on')}
+                  aria-pressed=${values.wordBankMethod === key}
+                  onClick=${() => setLabValue('wordBankMethod', key)}
+                >
+                  <span class="dict-head"><span class="dict-name">${name}</span></span>
+                  <span class="dict-desc">${desc}</span>
+                </button>
+              `
+            )}
+          </div>
+        </section>
+
+        <section>
+          <div class="row" style="align-items:baseline;gap:10px;margin-bottom:10px">
+            <h2 class="section-title">Experimental variants</h2>
+            <span class="body-13">All off by default. None of these ship as standard Phase 1 rules.</span>
+          </div>
+          <div class="col" style="gap:7px">
+            ${VARIANTS.map(
+              (v) => html`
+                <div key=${v.key} class="row-toggle">
+                  <span class="rt-text">
+                    <span class="rt-name">${v.name}</span>
+                    <span class="rt-desc">${v.desc}</span>
+                  </span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked=${!!values.variants[v.key]}
+                    aria-label=${v.name}
+                    class=${cx('switch', values.variants[v.key] && 'is-on')}
+                    onClick=${() => setLabVariant(v.key, !values.variants[v.key])}
+                  >
+                    <span class="knob"></span>
+                  </button>
+                </div>
+              `
+            )}
+          </div>
+        </section>
+
+        <section class="panel lab-panel">
+          <div class="kicker-sm">Not exposed here, on purpose</div>
+          <p class="body-13" style="margin:8px 0 0">
+            These change what the scorecard means, so they live in the ruleset file and require a
+            new ruleset version.
+          </p>
+          <div class="lab-locked">
+            ${standard.structuralSafeguards.locked.map((k) => html`<span key=${k}>${k}</span>`)}
+          </div>
+        </section>
+
+        <div class="row">
+          <button class="btn" type="button" onClick=${() => go('setup')}>Back to setup</button>
+          <span class="body-13">
+            ${state.lab.enabled
+              ? 'Your next run will be marked Custom.'
+              : 'Everything matches standard rules — runs stay leaderboard eligible.'}
+          </span>
+        </div>
+      </div>
+    </main>
+  `;
+}

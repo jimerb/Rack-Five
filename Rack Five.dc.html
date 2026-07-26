@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Caprasimo&family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:#0e1a17;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#e9c98a;text-decoration:none}
+a:hover{color:#f3e0b8}
+button{font:inherit}
+::selection{background:rgba(233,201,138,.3)}
+@keyframes r5pop{0%{transform:scale(.82);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes r5rise{0%{transform:translateY(10px);opacity:0}100%{transform:translateY(0);opacity:1}}
+@keyframes r5glow{0%,100%{box-shadow:0 0 0 rgba(233,201,138,0)}50%{box-shadow:0 0 22px rgba(233,201,138,.45)}}
+@keyframes r5pulse{0%,100%{outline-color:rgba(233,201,138,0)}50%{outline-color:rgba(233,201,138,.8)}}
+</style></helmet>
+
+<div style="{{ themeStyle }}height:100vh;overflow:hidden;background:var(--t-bg,#0e1a17);background-image:var(--t-bg-grad,radial-gradient(130% 100% at 50% -10%,#183029 0%,#0e1a17 62%)),var(--t-tex,repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 4px));color:var(--t-text,#ece7dc);font-family:var(--t-fb,'IBM Plex Sans',system-ui,sans-serif);display:flex;flex-direction:column">
+
+<div style="flex:none;display:flex;align-items:center;gap:clamp(10px,2vw,22px);flex-wrap:wrap;padding:14px clamp(14px,3vw,28px);border-bottom:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span onClick="{{ goHome }}" style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:17px;letter-spacing:.22em;text-transform:uppercase;color:var(--t-acc-hi,#e9c98a);cursor:pointer;white-space:nowrap">Rack&nbsp;Five</span>
+<span style="display:flex;gap:2px;flex-wrap:wrap">
+<sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+<span onClick="{{ n.go }}" style="{{ n.style }}">{{ n.label }}</span>
+</sc-for>
+</span>
+<span style="margin-left:auto;display:flex;align-items:center;gap:10px">
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">{{ themeName }}</span>
+<span onClick="{{ cycleTheme }}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);font-size:12px;color:var(--t-muted,#8fa39a);cursor:pointer;white-space:nowrap">Switch theme</span>
+</span>
+</div>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:clamp(20px,5vh,56px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:1020px;display:flex;flex-direction:column;gap:26px">
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:clamp(16px,4vw,44px)">
+<div style="flex:1 1 380px;min-width:0">
+<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:10px">Solo Arcade</div>
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(38px,7vw,62px);line-height:.98;letter-spacing:-.02em">Five words.<br>One scorecard.</div>
+<div style="font-size:16px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:14px;max-width:46ch;text-wrap:pretty">A rack of letters instead of five dice. Each word&rsquo;s length becomes its rank &mdash; then it plays exactly like a die face. Thirteen turns to fill the card.</div>
+</div>
+<div style="flex:0 1 320px;display:flex;gap:6px;align-items:flex-end">
+<sc-for list="{{ heroTiles }}" as="t" hint-placeholder-count="5">
+<div style="{{ t.style }}">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:600;font-size:clamp(24px,4.4vw,34px);line-height:1;color:var(--t-tile-text,#1d2b25)">{{ t.l }}</span>
+<span style="position:absolute;right:6px;bottom:3px;font-size:11px;font-weight:600;color:var(--t-tile-val,#7c8a7f)">{{ t.v }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+<span onClick="{{ goSetup }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 34px;font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:17px;letter-spacing:.03em;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Play Solo</span>
+<sc-if value="{{ hasSaved }}" hint-placeholder-val="{{ false }}">
+<span onClick="{{ resumeRun }}" style="display:inline-flex;align-items:center;gap:9px;min-height:52px;padding:0 24px;font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:15px;border:1px solid var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-btn-rad,6px);color:var(--t-acc-hi,#e9c98a);cursor:pointer">Resume &mdash; turn {{ savedTurn }} of 13<span style="font-family:var(--t-fb,inherit);font-weight:400;font-size:12px;color:var(--t-dim,#6f8a80)">{{ savedMeta }}</span></span>
+</sc-if>
+<span onClick="{{ openSeedEntry }}" style="display:inline-flex;align-items:center;min-height:52px;padding:0 22px;font-size:15px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-muted,#8fa39a);cursor:pointer">Play a Seed</span>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Personal best</div>
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:42px;line-height:1.05;color:var(--t-acc-hi,#e9c98a)">{{ bestScore }}</div>
+<div style="font-size:13px;color:var(--t-muted,#8fa39a)">{{ bestMeta }}</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Games played</div>
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:42px;line-height:1.05">{{ gamesPlayed }}</div>
+<div style="font-size:13px;color:var(--t-muted,#8fa39a)">Upper bonus earned {{ bonusRate }}</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Best banked word</div>
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:26px;line-height:1.3;letter-spacing:.06em">JUKEBOX</div>
+<div style="font-size:13px;color:var(--t-muted,#8fa39a)">27 tile value &middot; rank 5</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">
+<div style="position:relative;overflow:hidden;background:var(--t-panel,rgba(0,0,0,.24));border:1px dashed var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-rad,10px);padding:20px 22px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:19px">Daily Challenge</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--t-acc-soft,rgba(233,201,138,.1));color:var(--t-acc,#d9a54c)">Coming soon</span>
+</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);max-width:38ch;text-wrap:pretty">Everyone plays the same daily letters, whenever they like, and compares scores on one board.</div>
+<div style="display:flex;gap:4px;margin-top:16px">
+<sc-for list="{{ comingTilesA }}" as="c" hint-placeholder-count="6">
+<span style="width:26px;height:30px;border-radius:4px;background:var(--t-inset,rgba(0,0,0,.32));border:1px solid var(--t-line,rgba(233,201,138,.14));display:grid;place-items:center;font-size:13px;color:var(--t-dimmer,#4d635b)">{{ c }}</span>
+</sc-for>
+</div>
+</div>
+<div style="position:relative;overflow:hidden;background:var(--t-panel,rgba(0,0,0,.24));border:1px dashed var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-rad,10px);padding:20px 22px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:19px">Multiplayer</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--t-acc-soft,rgba(233,201,138,.1));color:var(--t-acc,#d9a54c)">Coming soon</span>
+</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);max-width:38ch;text-wrap:pretty">Identical letters and identical replacement luck. Everyone solves alone, then results are revealed together.</div>
+<div style="display:flex;gap:14px;margin-top:16px;font-size:12px;color:var(--t-dimmer,#4d635b)">
+<span>Same seed</span><span>&middot;</span><span>Independent racks</span><span>&middot;</span><span>Round reveal</span>
+</div>
+</div>
+</div>
+
+<div style="font-size:12px;color:var(--t-dimmer,#4d635b);border-top:1px solid var(--t-line,rgba(233,201,138,.14));padding-top:14px">Prototype build &middot; ruleset {{ rulesetVersion }} &middot; scores are stored locally</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSetup }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;padding:clamp(20px,4vh,44px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:940px;display:flex;flex-direction:column;gap:26px">
+<div>
+<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">New run</div>
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(28px,5vw,42px);line-height:1.05;margin-top:6px">Set up your game</div>
+</div>
+
+<div>
+<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:19px">Difficulty</span>
+<span style="font-size:13px;color:var(--t-muted,#8fa39a)">Difficulty sets your letter budget &mdash; nothing else changes.</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:10px">
+<sc-for list="{{ setupDiffs }}" as="d" hint-placeholder-count="3">
+<div onClick="{{ d.pickIt }}" style="{{ d.style }}">
+<span style="display:flex;align-items:center;gap:8px">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:20px">{{ d.name }}</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">{{ d.tag }}</span>
+</span>
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-size:14px;color:var(--t-acc-hi,#e9c98a)">{{ d.letters }}</span>
+<span style="font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a)">{{ d.blurb }}</span>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ hardWarning }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:10px;display:flex;gap:10px;align-items:flex-start;padding:13px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-acc-soft,rgba(233,201,138,.1));border:1px solid var(--t-line-2,rgba(233,201,138,.34))">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:700;color:var(--t-acc,#d9a54c);font-size:14px">Hard</span>
+<span style="font-size:13px;line-height:1.5;color:var(--t-muted,#8fa39a);text-wrap:pretty">Every category stays reachable, but a rank-6 Rack Five cannot be made &mdash; five 8-letter words need 40 letters and you only have 35.</span>
+</div>
+</sc-if>
+</div>
+
+<div>
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:10px">Timing</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:10px">
+<sc-for list="{{ setupTimes }}" as="d" hint-placeholder-count="3">
+<div onClick="{{ d.pickIt }}" style="{{ d.style }}">
+<span style="display:flex;align-items:center;gap:8px">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:20px">{{ d.name }}</span>
+<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">{{ d.tag }}</span>
+</span>
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-size:14px;color:var(--t-acc-hi,#e9c98a)">{{ d.letters }}</span>
+<span style="font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a)">{{ d.blurb }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Game length</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+<span style="display:inline-flex;align-items:center;padding:9px 16px;border-radius:var(--t-btn-rad,6px);background:var(--t-acc-soft,rgba(233,201,138,.1));border:2px solid var(--t-acc,#d9a54c);font-weight:600;font-size:14px;color:var(--t-acc-hi,#e9c98a)">Full &middot; 13 rounds</span>
+<span style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--t-btn-rad,6px);border:1px dashed var(--t-line,rgba(233,201,138,.14));font-size:14px;color:var(--t-dimmer,#4d635b)">Short &middot; 6<span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Coming soon</span></span>
+</div>
+<div style="font-size:12px;line-height:1.5;color:var(--t-dim,#6f8a80);margin-top:10px">The short game waits until the upper-bonus question is settled.</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Seed</div>
+<div style="display:flex;align-items:center;gap:9px;margin-top:10px;flex-wrap:wrap">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:600;font-size:20px;letter-spacing:.1em;color:var(--t-acc-hi,#e9c98a)">{{ setupSeed }}</span>
+<span onClick="{{ rerollSeed }}" style="font-size:12px;color:var(--t-muted,#8fa39a);cursor:pointer;border-bottom:1px dotted var(--t-line-2,rgba(233,201,138,.34))">Generate new</span>
+</div>
+<input value="{{ setupSeedInput }}" onChange="{{ onSeedInput }}" placeholder="or enter a shared run code" style="width:100%;margin-top:11px;min-height:42px;padding:8px 12px;font:inherit;font-size:14px;color:var(--t-text,#ece7dc);background:var(--t-inset,rgba(0,0,0,.32));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px)">
+<div style="font-size:12px;line-height:1.5;color:var(--t-dim,#6f8a80);margin-top:9px">Same seed and difficulty always deal the same racks and the same replacement luck.</div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:6px;border-top:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span onClick="{{ toggleCustom }}" style="{{ rulesStyle }}">{{ rulesLabel }}</span>
+<span onClick="{{ goLab }}" style="font-size:13px;color:var(--t-muted,#8fa39a);cursor:pointer;border-bottom:1px dotted var(--t-line-2,rgba(233,201,138,.34))">Advanced Gameplay &rarr; Gameplay Lab</span>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">
+<span onClick="{{ startRun }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 40px;font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:18px;letter-spacing:.03em;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Start Game</span>
+<span style="font-size:13px;color:var(--t-muted,#8fa39a)">{{ setupSummary }}</span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isGame }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:10px clamp(12px,2.4vw,24px) 12px;position:relative">
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:11px 16px">
+<span style="display:inline-flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t-acc,#d9a54c);border:1px solid var(--t-line-2,rgba(233,201,138,.34));border-radius:4px;padding:4px 10px">{{ gDiff }}</span>
+<span style="font-size:14px;color:var(--t-muted,#8fa39a)">Turn <strong style="font-family:var(--t-fd,sans-serif);color:var(--t-text,#ece7dc)">{{ gTurn }}</strong> / 13</span>
+<span style="display:flex;align-items:baseline;gap:7px;font-size:15px">
+<span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Budget</span>
+<strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700)">{{ gBudgetLoose }}</strong><span style="color:var(--t-muted,#8fa39a)">loose</span>
+<span style="color:var(--t-dimmer,#4d635b)">+</span>
+<strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700)">{{ gBudgetPlaced }}</strong><span style="color:var(--t-muted,#8fa39a)">{{ gPlacedLabel }}</span>
+<span style="color:var(--t-dimmer,#4d635b)">=</span>
+<strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);color:var(--t-acc-hi,#e9c98a)">{{ gBudget }}</strong>
+</span>
+<span style="flex:1 1 60px;min-width:56px;height:6px;border-radius:999px;background:var(--t-inset,rgba(0,0,0,.32));display:flex;overflow:hidden">
+<span style="width:{{ gBarPlaced }};background:var(--t-acc,#d9a54c)"></span>
+<span style="width:{{ gBarLoose }};background:var(--t-acc-soft,rgba(233,201,138,.2))"></span>
+</span>
+<span style="display:flex;align-items:center;gap:7px;white-space:nowrap">
+<span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Refresh</span>
+<span style="display:flex;gap:4px">
+<sc-for list="{{ gRefreshDots }}" as="d" hint-placeholder-count="2">
+<span style="{{ d.style }}"></span>
+</sc-for>
+</span>
+<span style="font-size:12px;color:var(--t-muted,#8fa39a)">{{ gRefreshLeft }} left</span>
+</span>
+<span style="display:flex;align-items:baseline;gap:6px;white-space:nowrap">
+<span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Bank</span>
+<strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;color:var(--t-acc-hi,#e9c98a)">{{ gWordBank }}</strong>
+</span>
+<span style="display:flex;align-items:baseline;gap:6px;white-space:nowrap">
+<span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Jumbo</span>
+<span style="font-size:12px;color:var(--t-muted,#8fa39a)">{{ gJumboShort }}</span>
+</span>
+<span style="margin-left:auto;display:flex;align-items:center;gap:10px">
+<span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">{{ gTiming }}</span>
+<span style="{{ gClockStyle }}">{{ gClock }}</span>
+</span>
+</div>
+
+<div style="flex:1;min-height:0;overflow:auto;display:flex;flex-wrap:wrap;gap:12px;align-items:stretch">
+
+<div style="flex:1 1 520px;min-width:0;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:13px 15px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">
+<span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t-muted,#8fa39a)">Loose rack</span>
+<sc-if value="{{ gRefreshMode }}" hint-placeholder-val="{{ false }}">
+<span style="font-size:12px;font-weight:600;color:var(--t-acc-hi,#e9c98a)">Tap tiles to discard &mdash; {{ gSelCount }} of {{ gRefreshCap }} selected</span>
+</sc-if>
+</span>
+<span style="display:inline-flex;overflow:hidden;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px)">
+<span onClick="{{ sortDraw }}" style="{{ sortStyle0 }}">Draw</span>
+<span onClick="{{ sortAz }}" style="{{ sortStyle1 }}">A&ndash;Z</span>
+<span onClick="{{ sortValue }}" style="{{ sortStyle2 }}">Value</span>
+</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:7px">
+<sc-for list="{{ gLoose }}" as="t" hint-placeholder-count="40">
+<div onClick="{{ t.tap }}" style="{{ t.style }}">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:600;font-size:clamp(20px,2.4vw,27px);line-height:1;color:var(--t-tile-text,#1d2b25)">{{ t.l }}</span>
+<span style="position:absolute;right:6px;bottom:3px;font-size:10px;font-weight:600;color:var(--t-tile-val,#7c8a7f)">{{ t.v }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:8px 14px;background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px)">
+<span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80);white-space:nowrap">Length becomes rank</span>
+<span style="display:flex;flex-wrap:wrap;gap:5px;flex:1">
+<sc-for list="{{ rankRows }}" as="r" hint-placeholder-count="6">
+<span style="display:inline-flex;align-items:baseline;gap:5px;padding:3px 9px;border-radius:var(--t-rad-sm,6px);background:var(--t-acc-soft,rgba(233,201,138,.09));border:1px solid var(--t-line,rgba(233,201,138,.16))">
+<span style="font-size:11px;color:var(--t-muted,#8fa39a)">{{ r.len }}</span>
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;color:var(--t-acc-hi,#e9c98a)">{{ r.r }}</span>
+</span>
+</sc-for>
+</span>
+</div>
+
+<div style="background:linear-gradient(180deg,var(--t-acc-soft,rgba(233,201,138,.09)),var(--t-panel,rgba(0,0,0,.25)));border:1px solid var(--t-line-2,rgba(233,201,138,.32));border-radius:var(--t-rad,10px);padding:12px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;min-height:54px;align-items:center">
+<sc-for list="{{ gBuild }}" as="b" hint-placeholder-count="0">
+<div data-bi="{{ b.bi }}" onPointerDown="{{ b.onPointerDown }}" onPointerMove="{{ b.onPointerMove }}" onPointerUp="{{ b.onPointerUp }}" onPointerCancel="{{ b.onPointerCancel }}" style="{{ b.style }}">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:600;font-size:23px;line-height:1;color:var(--t-tile-text,#1d2b25);pointer-events:none">{{ b.l }}</span>
+<span style="position:absolute;right:5px;bottom:2px;font-size:9px;font-weight:600;color:var(--t-tile-val,#7c8a7f);pointer-events:none">{{ b.v }}</span>
+</div>
+</sc-for>
+<sc-if value="{{ gBuildEmpty }}" hint-placeholder-val="{{ true }}">
+<span style="font-size:14px;color:var(--t-dim,#6f8a80)">Tap letters in the rack to build a word here.</span>
+</sc-if>
+</div>
+<div style="flex:1;min-width:150px">
+<div style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:21px;letter-spacing:.1em">{{ gBuildWord }}</div>
+<div style="font-size:12px;color:var(--t-muted,#8fa39a)">{{ gBuildLen }} letters &rarr; <span style="color:var(--t-acc-hi,#e9c98a);font-weight:600">rank {{ gBuildRank }}</span> &middot; tile value {{ gBuildValue }}</div>
+<sc-if value="{{ gBuildHasTiles }}" hint-placeholder-val="{{ false }}">
+<div style="font-size:11px;color:var(--t-dim,#6f8a80);margin-top:2px">Drag a tile sideways to reorder &middot; tap it to send it back to the rack.</div>
+</sc-if>
+</div>
+<span onClick="{{ undoBuild }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:13px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-muted,#8fa39a);cursor:pointer">Undo</span>
+<span onClick="{{ placeWord }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 26px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;letter-spacing:.03em;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Place word</span>
+</div>
+
+<sc-if value="{{ gExpired }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:11px 15px;border-radius:var(--t-rad-sm,6px);background:var(--t-warn-soft,rgba(226,112,90,.16));border:1px solid var(--t-warn,#e2705a)">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:700;font-size:13px;color:var(--t-warn,#e2705a)">Turn over</span>
+<span style="font-size:13px;line-height:1.45;color:var(--t-text,#ece7dc)">Tiles are locked and empty slots score rank 0. Open the scorecard and choose one category to finish the turn.</span>
+</div>
+</sc-if>
+<sc-if value="{{ gHasError }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:10px;align-items:flex-start;padding:11px 15px;border-radius:var(--t-rad-sm,6px);background:var(--t-warn-soft,rgba(226,112,90,.16));border:1px solid var(--t-warn,#e2705a)">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:700;font-size:13px;color:var(--t-warn,#e2705a)">Can&rsquo;t place that</span>
+<span style="font-size:13px;line-height:1.45;color:var(--t-text,#ece7dc);text-wrap:pretty">{{ gError }}</span>
+</div>
+</sc-if>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:9px">
+<sc-for list="{{ gSlots }}" as="s" hint-placeholder-count="5">
+<div onClick="{{ s.tap }}" style="{{ s.style }}">
+<div style="display:flex;align-items:center;gap:6px">
+<span style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Slot {{ s.n }}</span>
+<sc-if value="{{ s.isMoney }}" hint-placeholder-val="{{ false }}">
+<span style="margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--t-acc-hi,#e9c98a)">MONEY WORD</span>
+</sc-if>
+</div>
+<sc-if value="{{ s.filled }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;gap:2px;flex-wrap:wrap;margin:7px 0 auto">
+<sc-for list="{{ s.letters }}" as="L" hint-placeholder-count="6">
+<span style="{{ L.style }}">{{ L.c }}</span>
+</sc-for>
+</div>
+<div style="display:flex;align-items:baseline;gap:6px">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:26px;line-height:1;color:var(--t-acc-hi,#e9c98a)">{{ s.rank }}</span>
+<span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">rank</span>
+<span style="margin-left:auto;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px">{{ s.tileValue }}</span>
+<span style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">tile</span>
+</div>
+</sc-if>
+<sc-if value="{{ s.empty }}" hint-placeholder-val="{{ true }}">
+<div style="margin:auto 0;font-size:14px;color:var(--t-dim,#6f8a80)">Empty</div>
+</sc-if>
+<div style="{{ s.statusStyle }}">{{ s.status }}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 15px;border-radius:var(--t-rad,10px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span style="display:flex;align-items:baseline;gap:7px;white-space:nowrap">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:20px;color:var(--t-acc-hi,#e9c98a)">{{ gFilledCount }} of 5</span>
+<span style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">words placed</span>
+</span>
+<span style="flex:1 1 200px;font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a);text-wrap:pretty">{{ gNextStep }}</span>
+</div>
+</div>
+
+<div style="flex:1 1 330px;min-height:0;display:flex;flex-direction:column;gap:10px">
+<div style="flex:none;display:flex;flex-wrap:wrap;gap:8px">
+<sc-if value="{{ gRefreshMode }}" hint-placeholder-val="{{ false }}">
+<span onClick="{{ askRefresh }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 20px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Refresh {{ gSelCount }} tiles</span>
+<span onClick="{{ cancelRefresh }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:44px;font-size:14px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-muted,#8fa39a);cursor:pointer">Cancel</span>
+</sc-if>
+<sc-if value="{{ gCanEnterRefresh }}" hint-placeholder-val="{{ true }}">
+<span onClick="{{ enterRefresh }}" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:14px;border:1px solid var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-btn-rad,6px);color:var(--t-acc-hi,#e9c98a);cursor:pointer">Refresh loose tiles</span>
+</sc-if>
+<sc-if value="{{ gRefreshBlocked }}" hint-placeholder-val="{{ false }}">
+<span style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:14px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-dim,#6f8a80);opacity:.55;cursor:not-allowed">{{ gRefreshBlockedText }}</span>
+</sc-if>
+<span onClick="{{ openHint }}" style="{{ gHintBtnStyle }}">Hint &middot; costs {{ gHintCost }} &middot; {{ gHints }} left</span>
+</div>
+
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-rad,10px)">
+<div style="flex:none;display:flex;flex-direction:column;gap:10px;padding:12px 16px;background:var(--t-toast,#14231e);border-bottom:1px solid var(--t-line,rgba(233,201,138,.14))">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+<span style="font-family:var(--t-fd,'Space Grotesk',sans-serif);font-weight:var(--t-fwd,700);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t-muted,#8fa39a)">Scorecard</span>
+<span style="font-size:12px;color:var(--t-dim,#6f8a80)">{{ gOpenCount }} open &middot; ranks {{ gRanksLine }}</span>
+<span style="margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+<span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Take now</span>
+<sc-for list="{{ gPreviewChips }}" as="c" hint-placeholder-count="4">
+<span onClick="{{ c.pickIt }}" style="{{ c.style }}">{{ c.label }} {{ c.value }}</span>
+</sc-for>
+</span>
+</div>
+</div>
+<div style="flex:1;min-height:0;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+<span style="font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a);text-wrap:pretty">{{ gScoreHintText }}</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;font-size:11px;color:var(--t-dim,#6f8a80)">
+<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;border-left:4px solid var(--t-ok,#8ec0ab);background:var(--t-inset,rgba(0,0,0,.32))"></span>Scored &mdash; locked in for the game</span>
+<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:14px;height:14px;border-radius:3px;border:1px solid var(--t-line-2,rgba(233,201,138,.34));background:var(--t-acc-soft,rgba(233,201,138,.1))"></span>+n &mdash; what this hand would score now</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:8px">Upper section</div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<sc-for list="{{ gUpper }}" as="r" hint-placeholder-count="6">
+<div onClick="{{ r.choose }}" style="{{ r.rowStyle }}">
+<span style="font-weight:600;font-size:14px">{{ r.name }}</span>
+<span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ r.hint }}</span>
+<span style="{{ r.stateStyle }}">{{ r.state }}</span>
+<span style="{{ r.valStyle }}">{{ r.value }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:9px;margin-top:8px;padding:9px 12px;border-radius:var(--t-rad-sm,6px);border:1px dashed var(--t-line-2,rgba(233,201,138,.34));font-size:13px">
+<span style="font-weight:600">Upper bonus</span>
+<span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ gUpperSub }} of {{ gUpperThreshold }} needed</span>
+<span style="margin-left:auto;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);color:var(--t-acc-hi,#e9c98a)">+{{ gBonus }}</span>
+</div>
+</div>
+<div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:8px">Lower section</div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<sc-for list="{{ gLower }}" as="r" hint-placeholder-count="7">
+<div onClick="{{ r.choose }}" style="{{ r.rowStyle }}">
+<span style="font-weight:600;font-size:14px">{{ r.name }}</span>
+<span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ r.hint }}</span>
+<span style="{{ r.stateStyle }}">{{ r.state }}</span>
+<span style="{{ r.valStyle }}">{{ r.value }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+<sc-if value="{{ gHasHelp }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 16px;background:var(--t-toast,#14231e);border-top:2px solid var(--t-acc,#d9a54c);animation:r5rise .18s ease">
+<div style="flex:1 1 240px;min-width:0">
+<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">Not scored yet &middot; step 2 of 2</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;color:var(--t-acc-hi,#e9c98a)">{{ gHelpCat }} &mdash; {{ gHelpPoints }}</div>
+<div style="font-size:12px;line-height:1.4;color:var(--t-muted,#8fa39a);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ gHelpText }}</div>
+<div style="font-size:12px;line-height:1.4;color:var(--t-warn,#e2705a);margin-top:2px">Scoring is final and ends the turn.<sc-if value="{{ gHasEmpties }}" hint-placeholder-val="{{ false }}"><span> {{ gEmptyWarn }}</span></sc-if></div>
+</div>
+<span onClick="{{ clearHelp }}" style="font-size:13px;color:var(--t-muted,#8fa39a);cursor:pointer;padding:12px;white-space:nowrap">Pick another</span>
+<span onClick="{{ confirmScore }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 22px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:14px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer;white-space:nowrap">Confirm &amp; end turn</span>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+
+<sc-if value="{{ gHasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:70;padding:13px 22px;border-radius:999px;background:var(--t-toast,#14231e);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:14px;color:var(--t-text,#ece7dc);animation:r5rise .25s ease">{{ gToast }}</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ mAnyModal }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(6,12,10,.72);backdrop-filter:blur(3px)">
+
+<sc-if value="{{ mRefresh }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(520px,100%);display:flex;flex-direction:column;gap:14px;padding:26px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 26px 60px rgba(0,0,0,.6);animation:r5pop .2s ease">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:24px;color:var(--t-acc-hi,#e9c98a)">This step is irreversible</div>
+<div style="font-size:15px;line-height:1.55;color:var(--t-text,#ece7dc);text-wrap:pretty">Refreshing will replace <strong>{{ gSelCount }} loose tiles</strong> &mdash; and it makes <strong>every word you have placed permanent</strong>. Permanent words can&rsquo;t be dismantled, their letters can&rsquo;t be reclaimed, and blank assignments are fixed.</div>
+<div style="font-size:13px;line-height:1.5;color:var(--t-muted,#8fa39a);padding:12px 14px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24))">Your budget does not change. Letters already used in words are never replaced.</div>
+<div style="display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap">
+<span onClick="{{ cancelRefresh }}" style="display:inline-flex;align-items:center;min-height:46px;padding:0 20px;font-size:14px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-muted,#8fa39a);cursor:pointer">Keep rearranging</span>
+<span onClick="{{ confirmRefresh }}" style="display:inline-flex;align-items:center;min-height:46px;padding:0 24px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Replace {{ gSelCount }} tiles &amp; commit</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ mBlank }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(560px,100%);display:flex;flex-direction:column;gap:14px;padding:26px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:1px solid var(--t-blank-bd,#8ec0ab);box-shadow:0 26px 60px rgba(0,0,0,.6);animation:r5pop .2s ease">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:22px">What is this blank?</div>
+<div style="font-size:14px;line-height:1.5;color:var(--t-muted,#8fa39a)">A blank counts as one letter toward length and is worth 0 tile value. You can change it while the word is still provisional.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px">
+<sc-for list="{{ blankLetters }}" as="b" hint-placeholder-count="26">
+<span onClick="{{ b.pickIt }}" style="min-height:48px;display:grid;place-items:center;border-radius:var(--t-rad-sm,6px);background:var(--t-blank,linear-gradient(180deg,#e6f0e6,#cbdcce));color:var(--t-blank-text,#1d3a2c);font-family:var(--t-fd,sans-serif);font-weight:600;font-size:19px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 5px rgba(0,0,0,.4)">{{ b.L }}</span>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ mHint }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(520px,100%);display:flex;flex-direction:column;gap:14px;padding:26px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 26px 60px rgba(0,0,0,.6);animation:r5pop .2s ease">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:22px">Buy a hint</div>
+<div style="font-size:14px;line-height:1.5;color:var(--t-muted,#8fa39a);text-wrap:pretty">Costs {{ gHintCost }} points off your Word Bank and reveals one valid word of the length you pick, built from your current loose tiles. It makes no promise about the other four slots. {{ gHintMaxLabel }}.</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:7px">
+<sc-for list="{{ hintLens }}" as="h" hint-placeholder-count="6">
+<span onClick="{{ h.pickIt }}" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 0;border-radius:var(--t-rad-sm,6px);border:1px solid var(--t-line,rgba(233,201,138,.14));cursor:pointer">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:20px">{{ h.n }}</span>
+<span style="font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">rank {{ h.rank }}</span>
+</span>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:flex-end">
+<span onClick="{{ closeModal }}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;font-size:14px;color:var(--t-muted,#8fa39a);cursor:pointer">Never mind</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ mHintResult }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(480px,100%);display:flex;flex-direction:column;gap:14px;padding:26px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 26px 60px rgba(0,0,0,.6);animation:r5pop .2s ease">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">Hint &middot; {{ gHintCost }} points spent</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:34px;letter-spacing:.1em;color:var(--t-acc-hi,#e9c98a)">{{ gHintWord }}</div>
+<div style="font-size:13px;line-height:1.5;color:var(--t-muted,#8fa39a)">Your Word Bank is now {{ gWordBank }}. This word is reachable from your loose tiles, but it may not be the best use of them.</div>
+<div style="display:flex;justify-content:flex-end">
+<span onClick="{{ closeModal }}" style="display:inline-flex;align-items:center;min-height:46px;padding:0 24px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Got it</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ mJumbo }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(520px,100%);text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;padding:34px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:2px solid var(--t-acc,#d9a54c);box-shadow:0 26px 70px rgba(0,0,0,.65);animation:r5pop .3s ease">
+<div style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">Once per game</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:46px;line-height:1;color:var(--t-acc-hi,#e9c98a);animation:r5glow 1.6s ease infinite">JUMBO</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:600;font-size:26px;letter-spacing:.1em">{{ gJumboWord }}</div>
+<div style="font-size:15px;color:var(--t-muted,#8fa39a)">Nine letters or more, three points each &mdash; <strong style="color:var(--t-acc-hi,#e9c98a)">+{{ gJumboPoints }}</strong> added outside the scorecard.</div>
+<span onClick="{{ advance }}" style="display:inline-flex;align-items:center;min-height:48px;padding:0 30px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Nice &mdash; keep going</span>
+</div>
+</sc-if>
+
+<sc-if value="{{ mSummary }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(520px,100%);display:flex;flex-direction:column;gap:12px;padding:26px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 26px 60px rgba(0,0,0,.6);animation:r5pop .2s ease">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">Turn scored</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:28px;line-height:1.1">{{ gLastCat }} <span style="color:var(--t-acc-hi,#e9c98a)">+{{ gLastPoints }}</span></div>
+<div style="font-size:14px;color:var(--t-muted,#8fa39a)">Ranks {{ gLastRanks }}</div>
+<div style="display:flex;flex-direction:column;gap:7px;padding:14px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24))">
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Banked word</span><strong style="margin-left:auto;font-family:var(--t-fd,sans-serif);letter-spacing:.06em">{{ gLastBanked }}</strong><span style="color:var(--t-acc-hi,#e9c98a);font-weight:700">+{{ gLastBankedValue }}</span></div>
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Word Bank now</span><strong style="margin-left:auto">{{ gWordBank }}</strong></div>
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Running total</span><strong style="margin-left:auto;color:var(--t-acc-hi,#e9c98a)">{{ gRunTotal }}</strong></div>
+</div>
+<div style="display:flex;justify-content:flex-end">
+<span onClick="{{ advance }}" style="display:inline-flex;align-items:center;min-height:48px;padding:0 28px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Next turn</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ mTimeout }}" hint-placeholder-val="{{ false }}">
+<div style="width:min(500px,100%);display:flex;flex-direction:column;gap:14px;padding:26px 28px;border-radius:var(--t-rad,10px);background:var(--t-bg,#0e1a17);border:2px solid var(--t-warn,#e2705a);box-shadow:0 26px 60px rgba(0,0,0,.6);animation:r5pop .2s ease">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:24px;color:var(--t-warn,#e2705a)">Time&rsquo;s up</div>
+<div style="font-size:15px;line-height:1.55;color:var(--t-text,#ece7dc);text-wrap:pretty">Your placed words are safe and now permanent. Any empty slot becomes <strong>rank 0</strong> &mdash; a rank 0 adds nothing and can&rsquo;t join a set, a full house or a straight.</div>
+<div style="font-size:14px;color:var(--t-muted,#8fa39a)">Ranks this hand: {{ gRanksLine }}</div>
+<div style="display:flex;justify-content:flex-end">
+<span onClick="{{ closeModal }}" style="display:inline-flex;align-items:center;min-height:46px;padding:0 24px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Choose a category</span>
+</div>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;padding:clamp(20px,4vh,44px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:1000px;display:flex;flex-direction:column;gap:22px">
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:26px">
+<div>
+<sc-if value="{{ rIsPB }}" hint-placeholder-val="{{ false }}">
+<div style="display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--t-acc-soft,rgba(233,201,138,.14));color:var(--t-acc-hi,#e9c98a);border:1px solid var(--t-acc,#d9a54c);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Personal best</div>
+</sc-if>
+<div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--t-dim,#6f8a80)">Final score</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(64px,13vw,116px);line-height:.92;color:var(--t-acc-hi,#e9c98a)">{{ rFinal }}</div>
+</div>
+<div style="flex:1 1 260px;display:flex;flex-direction:column;gap:5px;min-width:0">
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Scorecard</span><span style="flex:1;border-bottom:1px dotted var(--t-line,rgba(233,201,138,.2))"></span><strong style="font-family:var(--t-fd,sans-serif)">{{ rLower }} + {{ rUpper }}</strong></div>
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Upper bonus</span><span style="flex:1;border-bottom:1px dotted var(--t-line,rgba(233,201,138,.2))"></span><strong style="font-family:var(--t-fd,sans-serif)">+{{ rBonus }}</strong></div>
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Word Bank</span><span style="flex:1;border-bottom:1px dotted var(--t-line,rgba(233,201,138,.2))"></span><strong style="font-family:var(--t-fd,sans-serif)">+{{ rBank }}</strong></div>
+<div style="display:flex;gap:10px;font-size:14px"><span style="color:var(--t-muted,#8fa39a)">Jumbo &middot; {{ rJumboWord }}</span><span style="flex:1;border-bottom:1px dotted var(--t-line,rgba(233,201,138,.2))"></span><strong style="font-family:var(--t-fd,sans-serif)">+{{ rJumbo }}</strong></div>
+<div style="display:flex;gap:10px;font-size:14px;color:var(--t-dim,#6f8a80)"><span>Hints used &middot; {{ rHints }}</span><span style="flex:1;border-bottom:1px dotted var(--t-line,rgba(233,201,138,.2))"></span><span>&minus;{{ rHintCost }} already off the bank</span></div>
+<div style="display:flex;gap:10px;font-size:16px;padding-top:8px;margin-top:4px;border-top:1px solid var(--t-line,rgba(233,201,138,.2))"><strong>Total</strong><span style="flex:1"></span><strong style="font-family:var(--t-fd,sans-serif);color:var(--t-acc-hi,#e9c98a)">{{ rFinal }}</strong></div>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+<span onClick="{{ rReplay }}" style="display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 26px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;background:var(--t-btn-bg,linear-gradient(180deg,#e0b263,#b4842f));color:var(--t-btn-fg,#1d2b25);border:1px solid var(--t-btn-bd,transparent);border-radius:var(--t-btn-rad,6px);box-shadow:var(--t-btn-sh,0 3px 0 #7d5b1f);cursor:pointer">Replay This Run</span>
+<span onClick="{{ rShareIt }}" style="display:inline-flex;align-items:center;min-height:50px;padding:0 22px;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:14px;border:1px solid var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-btn-rad,6px);color:var(--t-acc-hi,#e9c98a);cursor:pointer">Share This Seed</span>
+<span onClick="{{ rAnother }}" style="display:inline-flex;align-items:center;min-height:50px;padding:0 22px;font-size:14px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-muted,#8fa39a);cursor:pointer">Play Another</span>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<div style="flex:1 1 300px;background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:16px 18px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:10px">Run identity</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 22px;font-size:13px">
+<span style="color:var(--t-muted,#8fa39a)">Difficulty <strong style="color:var(--t-text,#ece7dc)">{{ rDiff }}</strong></span>
+<span style="color:var(--t-muted,#8fa39a)">Timing <strong style="color:var(--t-text,#ece7dc)">{{ rTiming }}</strong></span>
+<span style="color:var(--t-muted,#8fa39a)">Seed <strong style="font-family:var(--t-fd,sans-serif);letter-spacing:.08em;color:var(--t-acc-hi,#e9c98a)">{{ rSeed }}</strong></span>
+<span style="color:var(--t-muted,#8fa39a)">Ruleset <strong style="color:var(--t-text,#ece7dc)">{{ rRuleset }}</strong></span>
+<span style="color:var(--t-muted,#8fa39a)">Dictionary <strong style="color:var(--t-text,#ece7dc)">{{ rDict }}</strong></span>
+</div>
+<div style="margin-top:12px;padding:12px 14px;border-radius:var(--t-rad-sm,6px);background:var(--t-inset,rgba(0,0,0,.32));font-size:13px;line-height:1.5;color:var(--t-muted,#8fa39a);text-wrap:pretty">{{ rShare }}</div>
+</div>
+<div style="flex:1 1 220px;background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:16px 18px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:10px">Leaderboard</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:40px;line-height:1;color:var(--t-acc-hi,#e9c98a)">{{ rPlace }}</div>
+<div style="font-size:13px;color:var(--t-muted,#8fa39a);text-transform:capitalize">{{ rPlaceLine }}</div>
+<sc-if value="{{ rCustom }}" hint-placeholder-val="{{ false }}">
+<div style="margin-top:10px;font-size:12px;color:var(--t-warn,#e2705a)">Custom Run &mdash; not eligible for standard boards.</div>
+</sc-if>
+</div>
+</div>
+
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:10px">Completed scorecard</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:6px">
+<sc-for list="{{ rCardRows }}" as="r" hint-placeholder-count="13">
+<div style="{{ r.style }}"><span>{{ r.name }}</span><strong style="margin-left:auto;font-family:var(--t-fd,sans-serif)">{{ r.value }}</strong></div>
+</sc-for>
+</div>
+</div>
+
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:10px">Turn breakdown</div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<sc-for list="{{ rTurns }}" as="h" hint-placeholder-count="13">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding:10px 13px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));font-size:13px">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);width:26px;color:var(--t-dim,#6f8a80)">{{ h.turnNo }}</span>
+<span style="font-family:var(--t-fd,sans-serif);letter-spacing:.06em;flex:1 1 220px;min-width:0">{{ h.words }}</span>
+<span style="color:var(--t-muted,#8fa39a)">ranks {{ h.ranks }}</span>
+<span style="color:var(--t-acc-hi,#e9c98a)">{{ h.category }} +{{ h.points }}</span>
+<span style="color:var(--t-muted,#8fa39a)">banked {{ h.banked }} +{{ h.bankedValue }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+
+<sc-if value="{{ rHasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:70;padding:13px 22px;border-radius:999px;background:var(--t-toast,#14231e);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:14px;color:var(--t-text,#ece7dc)">{{ rToast }}</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLeaderboards }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;padding:clamp(20px,4vh,44px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:960px;display:flex;flex-direction:column;gap:20px">
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(28px,5vw,40px);line-height:1.05">Local leaderboards</div>
+<div style="font-size:14px;color:var(--t-muted,#8fa39a);margin-top:6px;max-width:60ch;text-wrap:pretty">Difficulties are kept apart on purpose. An Easy player gets more completed patterns, more Word Bank chances and a better shot at the upper bonus, so the scores aren&rsquo;t comparable.</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center">
+<sc-for list="{{ lbTabs }}" as="t" hint-placeholder-count="3">
+<span onClick="{{ t.pickIt }}" style="{{ t.style }}">{{ t.label }}</span>
+</sc-for>
+<span style="display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 18px;border-radius:var(--t-btn-rad,6px);border:1px dashed var(--t-line,rgba(233,201,138,.14));font-size:14px;color:var(--t-dimmer,#4d635b);cursor:not-allowed">Friends<span style="font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Coming soon</span></span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+<span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t-dim,#6f8a80);margin-right:4px">Timing</span>
+<sc-for list="{{ lbTiming }}" as="t" hint-placeholder-count="4">
+<span onClick="{{ t.pickIt }}" style="{{ t.style }}">{{ t.label }}</span>
+</sc-for>
+</div>
+<sc-if value="{{ lbEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:56px 24px;border-radius:var(--t-rad,10px);background:var(--t-panel,rgba(0,0,0,.24));border:1px dashed var(--t-line,rgba(233,201,138,.14));text-align:center">
+<div style="display:flex;gap:5px">
+<sc-for list="{{ rankRows2 }}" as="r" hint-placeholder-count="6">
+<span style="width:34px;height:38px;border-radius:var(--t-rad-sm,6px);background:var(--t-inset,rgba(0,0,0,.32));border:1px solid var(--t-line,rgba(233,201,138,.14));display:grid;place-items:center;font-family:var(--t-fd,sans-serif);font-size:15px;color:var(--t-dimmer,#4d635b)">{{ r.r }}</span>
+</sc-for>
+</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:20px">No {{ lbDiffName }} runs yet</div>
+<div style="font-size:14px;color:var(--t-muted,#8fa39a);max-width:40ch">Finish thirteen turns on {{ lbDiffName }} and your score lands here.</div>
+</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:6px">
+<sc-for list="{{ lbRows }}" as="b" hint-placeholder-count="5">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:13px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:15px;width:28px;color:var(--t-dim,#6f8a80)">{{ b.rank }}</span>
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:26px;line-height:1;color:var(--t-acc-hi,#e9c98a);min-width:64px">{{ b.score }}</span>
+<span style="display:flex;flex-direction:column;gap:1px;flex:1 1 190px;min-width:0">
+<span style="font-size:13px">{{ b.timing }} &middot; {{ b.date }} &middot; {{ b.mins }}</span>
+<span style="font-size:11px;color:var(--t-dim,#6f8a80)">card {{ b.card }} &middot; bank {{ b.bank }} &middot; jumbo {{ b.jumbo }} &middot; upper {{ b.upper }} &middot; hints {{ b.hints }}</span>
+</span>
+<span style="font-family:var(--t-fd,sans-serif);font-size:12px;letter-spacing:.08em;color:var(--t-muted,#8fa39a)">{{ b.seed }}</span>
+<sc-if value="{{ b.standard }}" hint-placeholder-val="{{ true }}">
+<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--t-acc-soft,rgba(233,201,138,.1));color:var(--t-acc,#d9a54c)">Standard</span>
+</sc-if>
+<sc-if value="{{ b.custom }}" hint-placeholder-val="{{ false }}">
+<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--t-warn-soft,rgba(226,112,90,.16));color:var(--t-warn,#e2705a)">Custom</span>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="font-size:12px;color:var(--t-dimmer,#4d635b)">Ties break on fewer hints, then shorter duration, then earlier completion.</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHowto }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;padding:clamp(20px,4vh,44px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:900px;display:flex;flex-direction:column;gap:30px">
+
+<div>
+<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">How to play</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(30px,5.5vw,46px);line-height:1.02;margin-top:6px">A word game played like Yahtzee</div>
+<div style="font-size:16px;line-height:1.6;color:var(--t-muted,#8fa39a);margin-top:12px;max-width:56ch;text-wrap:pretty">You get a rack of letter tiles instead of five dice. Build five words each turn. A word&rsquo;s <strong style="color:var(--t-text,#ece7dc)">length</strong> becomes its <strong style="color:var(--t-text,#ece7dc)">rank</strong>, and rank plays exactly like a die face.</div>
+</div>
+
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:20px 22px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:14px">Length becomes rank</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:9px">
+<sc-for list="{{ rankRows2 }}" as="r" hint-placeholder-count="6">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 0;border-radius:var(--t-rad-sm,6px);background:var(--t-acc-soft,rgba(233,201,138,.09));border:1px solid var(--t-line,rgba(233,201,138,.16))">
+<span style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--t-muted,#8fa39a)">{{ r.len }} letters</span>
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:34px;line-height:1;color:var(--t-acc-hi,#e9c98a)">{{ r.r }}</span>
+</div>
+</sc-for>
+</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:14px;text-wrap:pretty">Three of a kind is three words of equal length. A large straight is five words of consecutive lengths. Same Yahtzee logic, new engine &mdash; and the app always shows you the rank, so you never do the conversion in your head.</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">The letter budget</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px;text-wrap:pretty">Every turn you get a fixed budget, and it counts letters already used in words. Refreshes churn the loose pile only &mdash; they never hand you extra letters.</div>
+<div style="margin-top:12px;padding:11px 13px;border-radius:var(--t-rad-sm,6px);background:var(--t-inset,rgba(0,0,0,.32));font-family:var(--t-fd,sans-serif);font-size:15px;color:var(--t-acc-hi,#e9c98a)">27 loose + 13 placed = 40</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Difficulty</div>
+<div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">
+<div style="display:flex;gap:10px;font-size:14px"><strong style="width:64px">Easy</strong><span style="color:var(--t-acc-hi,#e9c98a);width:72px">45 letters</span><span style="color:var(--t-muted,#8fa39a);flex:1">More possible solutions</span></div>
+<div style="display:flex;gap:10px;font-size:14px"><strong style="width:64px">Medium</strong><span style="color:var(--t-acc-hi,#e9c98a);width:72px">40 letters</span><span style="color:var(--t-muted,#8fa39a);flex:1">The standard game</span></div>
+<div style="display:flex;gap:10px;font-size:14px"><strong style="width:64px">Hard</strong><span style="color:var(--t-acc-hi,#e9c98a);width:72px">35 letters</span><span style="color:var(--t-muted,#8fa39a);flex:1">Tighter decisions</span></div>
+</div>
+<div style="font-size:13px;line-height:1.5;color:var(--t-dim,#6f8a80);margin-top:10px">Hard keeps every category available, but a rank-6 Rack Five can&rsquo;t be made there.</div>
+</div>
+</div>
+
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-rad,10px);padding:20px 22px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px">Provisional, then permanent</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px;max-width:60ch;text-wrap:pretty">A word you place is <strong style="color:var(--t-acc-hi,#e9c98a)">provisional</strong> &mdash; rearrange it, dismantle it, reclaim its letters, change a blank, all with no penalty. Then you refresh, and every placed word becomes <strong style="color:var(--t-acc-hi,#e9c98a)">permanent</strong>. That&rsquo;s the only genuinely irreversible click in the turn.</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:16px">
+<div style="flex:1 1 240px;padding:13px 15px;border-radius:var(--t-rad-sm,6px);background:var(--t-acc-soft,rgba(233,201,138,.09));border:2px dashed var(--t-acc,#d9a54c)">
+<div style="font-family:var(--t-fd,sans-serif);letter-spacing:.06em;font-size:17px;font-weight:600">MOTELS</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-top:6px">&#9998; Provisional &middot; tap to edit</div>
+</div>
+<div style="flex:1 1 240px;padding:13px 15px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel-2,rgba(233,201,138,.07));border:2px solid var(--t-acc,#d9a54c)">
+<div style="font-family:var(--t-fd,sans-serif);letter-spacing:.06em;font-size:17px;font-weight:600">JUKEBOX</div>
+<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-top:6px">&#128274; Permanent</div>
+</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Word Bank</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px;text-wrap:pretty">Only the highest tile-value word in each hand is banked. Concentrate your good letters into one showcase word; the other four are pattern work.</div>
+<div style="display:flex;flex-direction:column;gap:5px;margin-top:11px;font-size:13px">
+<span>JUKEBOX &mdash; rank 5 &mdash; <strong style="color:var(--t-acc-hi,#e9c98a)">tile value 27</strong></span>
+<span style="color:var(--t-muted,#8fa39a)">AERATES &mdash; rank 5 &mdash; tile value 7</span>
+</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Jumbo</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px;text-wrap:pretty">The first word of 9 or more letters you play all game earns 3 points per letter, once. It takes no scorecard category.</div>
+<div style="display:flex;gap:14px;margin-top:11px;font-size:13px;color:var(--t-acc-hi,#e9c98a);font-family:var(--t-fd,sans-serif)"><span>9 &rarr; 27</span><span>11 &rarr; 33</span><span>13 &rarr; 39</span></div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Hints and blanks</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px;text-wrap:pretty">A hint costs 3 points off the Word Bank and reveals one valid word of a length you choose. Two per game, and the bank never goes negative. A blank counts as one letter, is worth 0, and its letter is fixed once the word goes permanent.</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Seeds and replay</div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px;text-wrap:pretty">Every run is defined by its seed and difficulty, so the same code deals the same racks and the same replacement luck. Share a run code and someone else can play your exact letters.</div>
+</div>
+</div>
+
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:10px">The scorecard</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">
+<div style="display:flex;flex-direction:column;gap:5px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:3px">Upper &mdash; points per word &times; words of that length</div>
+<sc-for list="{{ howUpper }}" as="r" hint-placeholder-count="6">
+<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));font-size:13px">
+<span style="font-weight:600">{{ r.name }}</span><span style="color:var(--t-dim,#6f8a80)">{{ r.hint }}</span>
+<strong style="margin-left:auto;font-family:var(--t-fd,sans-serif);color:var(--t-acc-hi,#e9c98a)">{{ r.pay }}</strong>
+</div>
+</sc-for>
+<div style="padding:8px 12px;border-radius:var(--t-rad-sm,6px);border:1px dashed var(--t-line-2,rgba(233,201,138,.34));font-size:13px;color:var(--t-muted,#8fa39a)">63 or more in the upper section adds <strong style="color:var(--t-acc-hi,#e9c98a)">+35</strong></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:3px">Lower</div>
+<sc-for list="{{ howLower }}" as="r" hint-placeholder-count="7">
+<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));font-size:13px">
+<span style="font-weight:600">{{ r.name }}</span><span style="color:var(--t-dim,#6f8a80)">{{ r.hint }}</span>
+<strong style="margin-left:auto;font-family:var(--t-fd,sans-serif);color:var(--t-acc-hi,#e9c98a)">{{ r.pay }}</strong>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="font-size:13px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:12px;max-width:66ch;text-wrap:pretty">A Rack Five counts for Three of a Kind and Four of a Kind, but <strong style="color:var(--t-text,#ece7dc)">not</strong> for a Full House &mdash; it has only one distinct rank. Rank 0 never satisfies any pattern. If nothing fits, take a zero somewhere. That&rsquo;s part of the game.</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px dashed var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="display:flex;align-items:center;gap:9px"><span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Daily Challenge</span><span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--t-acc-soft,rgba(233,201,138,.1));color:var(--t-acc,#d9a54c)">Coming soon</span></div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px">Everyone plays the same daily letters and compares scores.</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px dashed var(--t-line-2,rgba(233,201,138,.34));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="display:flex;align-items:center;gap:9px"><span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px">Multiplayer</span><span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--t-acc-soft,rgba(233,201,138,.1));color:var(--t-acc,#d9a54c)">Coming soon</span></div>
+<div style="font-size:14px;line-height:1.55;color:var(--t-muted,#8fa39a);margin-top:8px">Players solve identical racks independently and reveal their results together.</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;padding:clamp(20px,4vh,44px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:880px;display:flex;flex-direction:column;gap:28px">
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(28px,5vw,40px);line-height:1.05">Settings</div>
+</div>
+
+<div>
+<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:12px">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px">Theme</span>
+<span style="font-size:13px;color:var(--t-muted,#8fa39a)">Saved with your profile and applied everywhere.</span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+<sc-for list="{{ themeCards }}" as="c" hint-placeholder-count="3">
+<div onClick="{{ c.pickIt }}" style="{{ c.style }}">
+<div style="{{ c.previewStyle }}">
+<span style="{{ c.chipStyle }}">{{ c.kicker }}</span>
+<span style="display:flex;gap:5px;align-items:center">
+<sc-for list="{{ c.tileStyles }}" as="ts" hint-placeholder-count="3">
+<span style="{{ ts }}">A</span>
+</sc-for>
+<span style="{{ c.barStyle }}"></span>
+</span>
+</div>
+<div style="{{ c.footStyle }}">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px">{{ c.name }}</span>
+<sc-if value="{{ c.on }}" hint-placeholder-val="{{ false }}">
+<span style="margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t-acc,#d9a54c)">Selected</span>
+</sc-if>
+</div>
+<div style="font-size:12px;line-height:1.45;color:var(--t-muted,#8fa39a);margin-top:3px">{{ c.mood }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:12px">Gameplay &amp; accessibility</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<sc-for list="{{ settingToggles }}" as="t" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span style="flex:1;min-width:0">
+<span style="display:block;font-weight:600;font-size:15px">{{ t.name }}</span>
+<span style="display:block;font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a);margin-top:2px">{{ t.desc }}</span>
+</span>
+<span onClick="{{ t.toggle }}" style="{{ t.style }}"><span style="{{ t.knobStyle }}"></span></span>
+</div>
+</sc-for>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span style="font-weight:600;font-size:15px">Default rack sorting</span>
+<span style="display:flex;gap:6px;margin-left:auto;flex-wrap:wrap">
+<sc-for list="{{ sortPrefs }}" as="p" hint-placeholder-count="3">
+<span onClick="{{ p.pickIt }}" style="{{ p.style }}">{{ p.label }}</span>
+</sc-for>
+</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:15px">Tutorial prompts</span><span style="display:block;font-size:13px;color:var(--t-muted,#8fa39a);margin-top:2px">Replay the guided first turn from How to Play.</span></span>
+<span style="display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:var(--t-btn-rad,6px);border:1px solid var(--t-line,rgba(233,201,138,.14));font-size:13px;color:var(--t-muted,#8fa39a);cursor:pointer">Reset tutorial</span>
+</div>
+</div>
+</div>
+
+<div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px;margin-bottom:12px">Advanced</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<div onClick="{{ goLab2 }}" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px;border-radius:var(--t-rad-sm,6px);background:var(--t-acc-soft,rgba(233,201,138,.09));border:1px solid var(--t-line-2,rgba(233,201,138,.34));cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;color:var(--t-acc-hi,#e9c98a)">Gameplay Lab</span><span style="display:block;font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a);margin-top:3px;text-wrap:pretty">Balance controls for testing. Changing them creates a Custom Run and removes the score from standard leaderboards.</span></span>
+<span style="font-size:20px;color:var(--t-acc,#d9a54c)">&rarr;</span>
+</div>
+<div onClick="{{ exportData }}" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));cursor:pointer">
+<span style="flex:1;min-width:0"><span style="display:block;font-weight:600;font-size:15px">Export Playtest Data</span><span style="display:block;font-size:13px;color:var(--t-muted,#8fa39a);margin-top:2px">JSON event log plus a CSV turn and game summary. No personal data.</span></span>
+<span style="font-size:20px;color:var(--t-dim,#6f8a80)">&darr;</span>
+</div>
+</div>
+</div>
+<sc-if value="{{ oHasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:70;padding:13px 22px;border-radius:999px;background:var(--t-toast,#14231e);border:1px solid var(--t-line-2,rgba(233,201,138,.34));box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:14px;color:var(--t-text,#ece7dc)">{{ oToast }}</div>
+</sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLab }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;padding:clamp(20px,4vh,44px) clamp(14px,3vw,28px) 48px">
+<div style="width:100%;max-width:880px;display:flex;flex-direction:column;gap:24px">
+<div>
+<div style="display:flex;align-items:center;gap:10px">
+<span onClick="{{ goSettings }}" style="font-size:13px;color:var(--t-muted,#8fa39a);cursor:pointer">&larr; Settings</span>
+<span style="font-size:13px;color:var(--t-dimmer,#4d635b)">/ Advanced</span>
+</div>
+<div style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:clamp(28px,5vw,40px);line-height:1.05;margin-top:6px">Gameplay Lab</div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:16px 18px;border-radius:var(--t-rad,10px);background:var(--t-acc-soft,rgba(233,201,138,.09));border:1px solid var(--t-line-2,rgba(233,201,138,.34))">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:14px;color:var(--t-acc-hi,#e9c98a);white-space:nowrap">Testing only</span>
+<span style="font-size:14px;line-height:1.55;color:var(--t-text,#ece7dc);text-wrap:pretty">These controls are for testing game balance. Changing them creates a <strong>Custom Run</strong> and removes the score from standard leaderboards. Slot count, the rank bands and the category definitions are deliberately not exposed &mdash; they change what the scorecard means.</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+<span style="font-size:13px;color:var(--t-muted,#8fa39a)">Ruleset <strong style="color:var(--t-text,#ece7dc)">{{ rulesetVersion }}</strong></span>
+<sc-if value="{{ labChanged }}" hint-placeholder-val="{{ false }}">
+<span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:var(--t-warn-soft,rgba(226,112,90,.16));color:var(--t-warn,#e2705a)">Modified from standard</span>
+</sc-if>
+<span onClick="{{ labReset }}" style="margin-left:auto;display:inline-flex;align-items:center;min-height:42px;padding:0 18px;border-radius:var(--t-btn-rad,6px);border:1px solid var(--t-line,rgba(233,201,138,.14));font-size:13px;color:var(--t-muted,#8fa39a);cursor:pointer">Reset to Standard Rules</span>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:12px">Letter pressure</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ labLetters }}" as="r" hint-placeholder-count="3">
+<div>
+<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:5px"><span style="font-size:13px;flex:1">{{ r.label }}</span><strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;color:var(--t-acc-hi,#e9c98a)">{{ r.value }}</strong><span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ r.unit }}</span></div>
+<input type="range" min="{{ r.min }}" max="{{ r.max }}" step="{{ r.step }}" value="{{ r.value }}" onInput="{{ r.onInput }}" style="width:100%;accent-color:var(--t-acc,#d9a54c)">
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:12px">Scoring pressure</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ labScoring }}" as="r" hint-placeholder-count="4">
+<div>
+<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:5px"><span style="font-size:13px;flex:1">{{ r.label }}</span><strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;color:var(--t-acc-hi,#e9c98a)">{{ r.value }}</strong><span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ r.unit }}</span></div>
+<input type="range" min="{{ r.min }}" max="{{ r.max }}" step="{{ r.step }}" value="{{ r.value }}" onInput="{{ r.onInput }}" style="width:100%;accent-color:var(--t-acc,#d9a54c)">
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:12px">Assistance</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ labAssist }}" as="r" hint-placeholder-count="2">
+<div>
+<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:5px"><span style="font-size:13px;flex:1">{{ r.label }}</span><strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;color:var(--t-acc-hi,#e9c98a)">{{ r.value }}</strong><span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ r.unit }}</span></div>
+<input type="range" min="{{ r.min }}" max="{{ r.max }}" step="{{ r.step }}" value="{{ r.value }}" onInput="{{ r.onInput }}" style="width:100%;accent-color:var(--t-acc,#d9a54c)">
+</div>
+</sc-for>
+</div>
+</div>
+<div style="background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-rad,10px);padding:18px 20px">
+<div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--t-acc,#d9a54c);margin-bottom:12px">Pace</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ labPace }}" as="r" hint-placeholder-count="2">
+<div>
+<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:5px"><span style="font-size:13px;flex:1">{{ r.label }}</span><strong style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:16px;color:var(--t-acc-hi,#e9c98a)">{{ r.value }}</strong><span style="font-size:11px;color:var(--t-dim,#6f8a80)">{{ r.unit }}</span></div>
+<input type="range" min="{{ r.min }}" max="{{ r.max }}" step="{{ r.step }}" value="{{ r.value }}" onInput="{{ r.onInput }}" style="width:100%;accent-color:var(--t-acc,#d9a54c)">
+</div>
+</sc-for>
+<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--t-rad-sm,6px);border:1px dashed var(--t-line,rgba(233,201,138,.14));font-size:13px;color:var(--t-dimmer,#4d635b)">Short game &middot; 6 rounds<span style="margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Coming soon</span></div>
+</div>
+</div>
+</div>
+
+<div>
+<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">
+<span style="font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:19px">Experimental variants</span>
+<span style="font-size:13px;color:var(--t-muted,#8fa39a)">All off by default. None of these ship as standard Phase 1 rules.</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<sc-for list="{{ labVariants }}" as="v" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:var(--t-rad-sm,6px);background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14))">
+<span style="flex:1;min-width:0">
+<span style="display:block;font-weight:600;font-size:15px">{{ v.name }}</span>
+<span style="display:block;font-size:13px;line-height:1.45;color:var(--t-muted,#8fa39a);margin-top:2px;text-wrap:pretty">{{ v.desc }}</span>
+</span>
+<span onClick="{{ v.toggle }}" style="{{ v.style }}"><span style="{{ v.knobStyle }}"></span></span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const RULESET = {
+  version: 'phase1.0', slotCount: 5, minWordLength: 3,
+  difficulty: {
+    easy:   { budget: 45, upperBonusThreshold: 63, blurb: 'More letters, more possible solutions' },
+    medium: { budget: 40, upperBonusThreshold: 63, blurb: 'The standard game' },
+    hard:   { budget: 35, upperBonusThreshold: 63, blurb: 'Fewer letters, tighter decisions' }
+  },
+  refresh: { count: 2, maxTiles: 10, commitsPlacedWords: true },
+  timingSeconds: { relaxed: null, standard: 180, blitz: 90 },
+  upperBonusPoints: 35,
+  wordBank: { method: 'highest_word_each_turn', hintCost: 3, maxHints: 2 },
+  jumbo: { minLength: 9, pointsPerLetter: 3, maxAwards: 1 },
+  rackFiveMultiplier: 10
+};
+
+const TV = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:5,L:1,M:3,N:1,O:1,P:3,Q:10,R:1,S:1,T:1,U:1,V:4,W:4,X:8,Y:4,Z:10};
+const BAG_SPEC = 'A9 B2 C2 D4 E12 F2 G3 H2 I9 J1 K1 L4 M2 N6 O8 P2 Q1 R6 S4 T6 U4 V2 W2 X1 Y2 Z1 _2';
+
+const THEMES = {
+  feltwork: {
+    name: 'Feltwork', kicker: 'Default', mood: 'Deep felt table, ivory tiles, brass',
+    vars: {
+      '--t-bg':'#0e1a17',
+      '--t-bg-grad':'radial-gradient(130% 100% at 50% -10%,#183029 0%,#0e1a17 62%)',
+      '--t-tex':'repeating-linear-gradient(45deg,rgba(255,255,255,.012) 0 2px,transparent 2px 4px)',
+      '--t-panel':'rgba(0,0,0,.24)','--t-panel-2':'rgba(233,201,138,.07)','--t-inset':'rgba(0,0,0,.32)',
+      '--t-line':'rgba(233,201,138,.14)','--t-line-2':'rgba(233,201,138,.34)',
+      '--t-text':'#ece7dc','--t-muted':'#8fa39a','--t-dim':'#7e968b','--t-dimmer':'#6e877d',
+      '--t-acc':'#d9a54c','--t-acc-hi':'#e9c98a','--t-acc-soft':'rgba(233,201,138,.10)',
+      '--t-second':'#8ec0ab','--t-second-deep':'#2f6b52','--t-ok':'#8ec0ab',
+      '--t-warn':'#e2705a','--t-warn-soft':'rgba(226,112,90,.16)','--t-toast':'#14231e',
+      '--t-blank':'linear-gradient(180deg,#e6f0e6,#cbdcce)','--t-blank-bd':'#8ec0ab','--t-blank-text':'#1d3a2c',
+      '--t-tile':'linear-gradient(180deg,#f7f1e2 0%,#e5dbc4 100%)','--t-tile-hi':'#fffdf6','--t-tile-lo':'#cbbf9f',
+      '--t-tile-text':'#1d2b25','--t-tile-val':'#7c8a7f',
+      '--t-rad':'10px','--t-rad-sm':'6px',
+      '--t-fd':"'Space Grotesk',system-ui,sans-serif",'--t-fb':"'IBM Plex Sans',system-ui,sans-serif",'--t-fwd':'700',
+      '--t-btn-bg':'linear-gradient(180deg,#e0b263,#b4842f)','--t-btn-fg':'#1d2b25','--t-btn-bd':'transparent',
+      '--t-btn-sh':'0 3px 0 #7d5b1f','--t-btn-rad':'6px'
+    }
+  },
+  midnight: {
+    name: 'Midnight', kicker: 'Dark alternate', mood: 'Quiet blue-grey, blurple line and glow',
+    vars: {
+      '--t-bg':'#161826',
+      '--t-bg-grad':'radial-gradient(120% 90% at 15% 0%,#1e2133 0%,#161826 60%)',
+      '--t-tex':'none',
+      '--t-panel':'#232532','--t-panel-2':'#2b2741','--t-inset':'#1b1d29',
+      '--t-line':'rgba(233,233,237,.16)','--t-line-2':'#9184d9',
+      '--t-text':'#e9e9ed','--t-muted':'#b2b6ca','--t-dim':'#9397ab','--t-dimmer':'#9397ab',
+      '--t-acc':'#9184d9','--t-acc-hi':'#d2cefd','--t-acc-soft':'rgba(145,132,217,.12)',
+      '--t-second':'#b5abfc','--t-second-deep':'#423a6a','--t-ok':'#b5abfc',
+      '--t-warn':'#b5abfc','--t-warn-soft':'rgba(145,132,217,.16)','--t-toast':'#232532',
+      '--t-blank':'linear-gradient(180deg,#4a4470,#38325c)','--t-blank-bd':'#9184d9','--t-blank-text':'#f5f4ff',
+      '--t-tile':'linear-gradient(180deg,#3f424d 0%,#2f323c 100%)','--t-tile-hi':'#595d6c','--t-tile-lo':'#292b31',
+      '--t-tile-text':'#f3f5fe','--t-tile-val':'#9397ab',
+      '--t-rad':'14px','--t-rad-sm':'8px',
+      '--t-fd':'Inter,system-ui,sans-serif','--t-fb':'Inter,system-ui,sans-serif','--t-fwd':'500',
+      '--t-btn-bg':'transparent','--t-btn-fg':'#9184d9','--t-btn-bd':'#9184d9',
+      '--t-btn-sh':'none','--t-btn-rad':'8px'
+    }
+  },
+  sandbar: {
+    name: 'Sandbar', kicker: 'Light tabletop', mood: 'Warm cream board, terracotta and sage',
+    vars: {
+      '--t-bg':'#f5ead8','--t-bg-grad':'none','--t-tex':'none',
+      '--t-panel':'#ebddc5','--t-panel-2':'#f9f4ed','--t-inset':'#dcd3c4',
+      '--t-line':'rgba(32,30,29,.16)','--t-line-2':'#c67139',
+      '--t-text':'#201e1d','--t-muted':'#474238','--t-dim':'#645c50','--t-dimmer':'#645c50',
+      '--t-acc':'#c67139','--t-acc-hi':'#8c491a','--t-acc-soft':'#fff2eb',
+      '--t-second':'#7a8a5e','--t-second-deep':'#3d472b','--t-ok':'#3d472b',
+      '--t-warn':'#8c491a','--t-warn-soft':'#ffe1d0','--t-toast':'#ebddc5',
+      '--t-blank':'linear-gradient(180deg,#f0fae1,#e1eecc)','--t-blank-bd':'#7a8a5e','--t-blank-text':'#3d472b',
+      '--t-tile':'linear-gradient(180deg,#f9f4ed 0%,#f1e9da 100%)','--t-tile-hi':'#ffffff','--t-tile-lo':'#dcd3c4',
+      '--t-tile-text':'#2e2b25','--t-tile-val':'#a19786',
+      '--t-rad':'28px','--t-rad-sm':'16px',
+      '--t-fd':'Caprasimo,system-ui,sans-serif','--t-fb':'Figtree,system-ui,sans-serif','--t-fwd':'400',
+      '--t-btn-bg':'#c67139','--t-btn-fg':'#f5ead8','--t-btn-bd':'transparent',
+      '--t-btn-sh':'none','--t-btn-rad':'999px'
+    }
+  }
+};
+const THEME_ORDER = ['feltwork','midnight','sandbar'];
+
+function varString(t) {
+  const v = THEMES[t].vars; let s = '';
+  for (const k in v) s += k + ':' + v[k] + ';';
+  return s;
+}
+
+function hashSeed(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function buildBag() { const out = []; BAG_SPEC.split(' ').forEach(p => { const l = p[0], n = parseInt(p.slice(1), 10); for (let i = 0; i < n; i++) out.push(l); }); return out; }
+function newSeed() { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 5; i++) s += c[Math.floor(Math.random() * c.length)]; return 'RF-' + s; }
+
+function drawTurn(seed, turnNo, budget, queueLen) {
+  const rnd = mulberry32(hashSeed(seed + ':' + turnNo));
+  const bag = buildBag();
+  for (let i = bag.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = bag[i]; bag[i] = bag[j]; bag[j] = t; }
+  const mk = (l, i) => ({ id: turnNo + '-' + i, blank: l === '_', letter: l === '_' ? '' : l, value: l === '_' ? 0 : TV[l] });
+  const qLen = Math.min(Math.max(20, queueLen || 20), bag.length - budget);
+  return { rack: bag.slice(0, budget).map(mk), queue: bag.slice(budget, budget + qLen).map((l, i) => mk(l, 500 + i)) };
+}
+
+function rankOf(len) { return len < 3 ? 0 : (len >= 8 ? 6 : len - 2); }
+
+const UPPER_KEYS = ['ones','twos','threes','fours','fives','sixes'];
+
+function evaluate(ranks) {
+  const sum = ranks.reduce((a, b) => a + b, 0);
+  const counts = {}; ranks.forEach(r => { if (r > 0) counts[r] = (counts[r] || 0) + 1; });
+  const distinct = Object.keys(counts).map(Number).sort((a, b) => a - b);
+  const vals = Object.values(counts);
+  const maxCount = vals.length ? Math.max.apply(null, vals) : 0;
+  const hasZero = ranks.some(r => r === 0);
+  let best = distinct.length ? 1 : 0, cur = 1;
+  for (let i = 1; i < distinct.length; i++) { cur = distinct[i] === distinct[i - 1] + 1 ? cur + 1 : 1; if (cur > best) best = cur; }
+  const out = {};
+  for (let k = 1; k <= 6; k++) out[UPPER_KEYS[k - 1]] = (counts[k] || 0) * k;
+  out.threeKind = maxCount >= 3 ? sum : 0;
+  out.fourKind = maxCount >= 4 ? sum : 0;
+  out.fullHouse = (!hasZero && distinct.length === 2 && vals.indexOf(3) >= 0 && vals.indexOf(2) >= 0) ? 25 : 0;
+  out.smallStraight = best >= 4 ? 30 : 0;
+  out.largeStraight = (distinct.length === 5 && best >= 5) ? 40 : 0;
+  out.chance = sum;
+  out.rackFive = (distinct.length === 1 && counts[distinct[0]] === 5) ? RULESET.rackFiveMultiplier * distinct[0] : 0;
+  return out;
+}
+
+const NAV = [
+  { key: 'home', label: 'Home' },
+  { key: 'setup', label: 'Play' },
+  { key: 'leaderboards', label: 'Leaderboards' },
+  { key: 'howto', label: 'How to Play' },
+  { key: 'settings', label: 'Settings' }
+];
+
+const DEMO_BESTS = [
+  { score: 312, difficulty: 'medium', timing: 'standard', date: '18 Jul 2026', seed: 'RF-7K4M2', card: 214, bank: 63, jumbo: 35, upper: 35, mins: 38, hints: 0, custom: false },
+  { score: 286, difficulty: 'medium', timing: 'standard', date: '11 Jul 2026', seed: 'RF-QB92X', card: 198, bank: 61, jumbo: 27, upper: 0, mins: 41, hints: 1, custom: false },
+  { score: 271, difficulty: 'medium', timing: 'relaxed', date: '04 Jul 2026', seed: 'RF-M3TT8', card: 189, bank: 82, jumbo: 0, upper: 35, mins: 62, hints: 0, custom: false },
+  { score: 248, difficulty: 'medium', timing: 'blitz', date: '28 Jun 2026', seed: 'RF-V7NQ4', card: 176, bank: 45, jumbo: 27, upper: 0, mins: 22, hints: 2, custom: false },
+  { score: 231, difficulty: 'medium', timing: 'standard', date: '21 Jun 2026', seed: 'RF-88JCR', card: 160, bank: 71, jumbo: 0, upper: 0, mins: 44, hints: 0, custom: true },
+  { score: 344, difficulty: 'hard', timing: 'relaxed', date: '15 Jul 2026', seed: 'RF-ZP5KD', card: 249, bank: 60, jumbo: 35, upper: 35, mins: 71, hints: 0, custom: false },
+  { score: 268, difficulty: 'hard', timing: 'standard', date: '02 Jul 2026', seed: 'RF-R4WW9', card: 195, bank: 46, jumbo: 27, upper: 0, mins: 46, hints: 1, custom: false }
+];
+
+const WORDS = ('ace act age aid aim air ale all and ant any ape apt arc are arm art ash ask ate awe axe bad bag ban bar bat bay bed bee bet bid big bit box boy bud bug bus but buy cab can cap car cat cod cog cop cot cow cry cub cue cup cut day den dew die dig dim din dip doe dog dot dry due dug duo dye ear eat egg ego elf elk elm end eon era eve eye fan far fat fee few fig fin fir fit fix fly foe fog fox fry fun fur gap gas gem get gin gum gun gut gym had ham has hat hay hem hen her hid him hip his hit hoe hog hop hot how hub hue hug hum hut ice icy ill imp ink inn ion ire its ivy jab jam jar jaw jay jet jig job jog jot joy jug keg key kid kin kit lab lad lag lap law lay led leg let lid lie lip lit lob log lot low lug mad man map mar mat may men met mid mix mob mop mow mud mug nab nag nap net new nib nil nip nod nor not now nun nut oak oar oat odd ode off oil old one opt orb ore our out owe owl own pad pal pan par pat paw pay pea peg pen pep per pet pie pig pin pit ply pod pot pro pry pub pun pup put rag ram ran rap rat raw ray red rib rid rig rim rip rob rod roe rot row rub rue rug rum run rut rye sac sad sag sap sat saw say sea see set sew she shy sin sip sir sit six ski sky sly sob sod son sow soy spa spy sty sub sue sum sun tab tag tan tap tar tax tea ten the thy tic tie tin tip toe ton too top tot tow toy try tub tug two urn use van vat vet vex via vie vow wad wag wan war was wax way web wed wee wet who why wig win wit woe wok won woo wry yak yam yap yes yet yew you zap zen zip zoo ' +
+'able acid aide airy ally also apex arch area army atom aunt away axle bake bald bare barn base bath bead beam bean bear beat beef beer bell belt bend best bike bill bind bird bite blow blue boat body boil bold bolt bone book boot bore born both bowl brag bran brat brew brim bulk bunk burn bush busy cage cake calm came camp cane cape card care cart case cash cast cave cell cent chat chef chin chip chop cite city clam clan claw clay clip club coal coat code coil coin cold come cone cook cool cope copy cord core cork corn cost cove crab crew crib crop crow cube cult curb cure curl dare dark dart dash date dawn days dead deaf deal dean dear debt deck deed deep deer dent deny desk dial dice diet dime dine dirt dish disk dive dock does dole dome done doom door dose dove down doze drag draw drew drip drop drum dual duck dues duke dull dumb dune dusk dust duty each earl earn ease east easy echo edge edit eels eggs else emit ends envy epic even ever evil exam exit eyes face fact fade fail fair fake fall fame farm fast fate fawn fear feat feed feel feet fell felt fern feud file fill film find fine fire firm fish fist five flag flap flat flaw flax fled flee flew flip flop flow flux foal foam foil fold folk font food fool foot ford fore fork form fort foul four fowl free frog from fuel full fund fuse ' +
+'about above acorn actor adopt adult after agent agree ahead alarm album alert alien alike alive alley allow alone along aloud alter amber amend among ample angel anger angle ankle apart apple apron arena argue arise armor aroma array arrow aside asset atlas audio audit avoid awake award aware badge baker balmy banjo barge basic basin baton beach beard beast begin being belly bench berry birch birth black blade blame blank blast blaze bleak blend bless blind block blood bloom blown blues board boast bonus boost booth bound brace braid brain brake brand brass brave bread break breed brick bride brief bring brisk broad broke brook broom brown brush build built bunch bunny burst cabin cable cadet cameo canal candy canoe canon cargo carol carry carve catch cause cedar chain chair chalk chant chaos charm chart chase cheap cheat check cheek cheer chess chest chief child chill china choir chord chose chunk cider cigar civic civil claim clamp clash clasp class clean clear clerk click cliff climb cling cloak clock close cloth cloud clown coach coast cobra cocoa colon color comet comic coral corner ' +
+'abroad absorb accept access across action active actual adjust admire advice affair afford agency agenda alight almond alpine amount anchor animal annual answer anthem anyone appeal appear arcade archer around arrive artist aspect assign assist assume atomic attach attack attend author autumn avenue awhile backup badger bakery ballad ballet bamboo banana banner barrel basket batter beacon beaker beetle before begins behalf behave belief belong beside better beyond bishop bitter blazer bleach blinds blonde bounce bracket branch brandy breach breath breeze bridge bright broken bronze brooch bubble bucket budget buffet bugler bundle bureau burden bureau butter button camera cancel candle canvas canyon carbon carpet carrot cartel carton casino castle casual cattle caught cavern celery cement census cereal chalet chance change chapel charge charts cheese cherry chilly choice choose chorus chosen church cinema circle circus citrus clause clever client climax clinic closet clover cobalt coffee collar collie colony column combat comedy coming commit common cookie coolly copper corner cotton county couple coupon course cousin coyote cradle crayon create credit cricket motels ' +
+'abandon ability absence academy acclaim account accused achieve acquire address advance adverse advised airport alcohol already amateur amusing analyst ancient another anybody anytime apparel appeals applied approve arrival article artwork aspects assault assumed athlete attempt attract auction audible average awesome balance balcony bandage banking baptism bargain barrier battery bearing bedroom bedside believe beneath benefit besides between bicycle biology bizarre blanket blender blossom bombard booklet boredom bottled boulder bracket braided brawler brevity brigade brittle broaden brought bruised buffalo builder bulletin cabinet caffeine calcium calling canyons capable capital caption capture caramel caravan carbine cardiac careful carnage carpets carrier cartoon carving cascade cashier casting catalog cauldron caution cavalry ceiling cellars centaur central century ceramic certain chamber channel chapter charity charter chatter cheaper checked cheddar chemist cherish chicken chimney chorale citizen clarify classic clatter cleanse cleared clearly clemency clients climate clipper closest closure clothes coastal cobbler cocktail collage collide college cologne colonel column combine command comment commute compact company compare compass compete compile complex comport compose compute concept concern concert conduct confirm connect consent consist console consult contact contain content contest context control convert cooking coolant copyist coridal costume cottage council counsel counter country courage courier covered cowboys cracker cradles crafted cranium crashed created creator creamer credits crevice cricket crimson crinkle crisply critter crooked crowded crumble crusade crystal culture cupcake curator curious current cursive curtain cushion custard customs cutlery cyclist jukebox aerates authors ' +
+'absolute abstract academic accepted accident accurate achieved acquired activity actually addition adequate adjacent adjusted advanced advisory advocate aircraft alliance although aluminum ambition analysis announce anything anywhere apparent appendix approach approval arguable arranged assembly assigned assisted assuming athletic attached attitude audience aviation bachelor backbone backyard bacteria balanced ballroom bankrupt baseball bathroom bearings bedrooms behavior believed benchmark birthday blizzard bookcase boundary bracelet brainpan brethren brighten brilliant broccoli brochure brothers building bulletin business campaign capacity carefree carriage cathedral ceremony certain chairman champion chandler changing chaplain charcoal charming charters cheerful chemical children chocolate cleaning clearing clinical clothing coalesce cocktail cognitive coherent collapse collided colonial colorful combined comedian commence commerce commuter compiler complain complete composer compound computer conclude concrete condense conducted conferred confetti confided conflict confused congress conquest consider consists constant consumed contains contempt contests continue contract contrast converse convince cookbook cordless corridor costumes cottages coupling coverage cowardly crawlers creation creative creature credible creditor crescent cribbage critical crossbar crowbars crumbled crusader crushing culinary cultural cupboard curators currency customer cylinder ' +
+'abandoned according advantage adventure aftermath afternoon alignment allowance amendment ancestors announced apartment appliance appointed architect astronomy attendant attention automatic ballplayer basketball birthstone bookkeeper brainstorm brilliance broadcaster candlelight carpenters celebration chandeliers characters clockmaker collarbone commanders compilation completely complicated confidence considered constellation containers contractor conventions coordinate copyrights cornerstone corporation countryside courageous crossroads jukeboxes friendship permanence generators narratives motorbikes').split(' ');
+const WORDSET = new Set(WORDS);
+
+const CATS = [
+  { key: 'ones', name: 'Ones', section: 'upper', hint: '3-letter words', help: 'Scores 1 point for every rank-1 (3-letter) word in the hand.' },
+  { key: 'twos', name: 'Twos', section: 'upper', hint: '4-letter words', help: 'Scores 2 points for every rank-2 (4-letter) word in the hand.' },
+  { key: 'threes', name: 'Threes', section: 'upper', hint: '5-letter words', help: 'Scores 3 points for every rank-3 (5-letter) word in the hand.' },
+  { key: 'fours', name: 'Fours', section: 'upper', hint: '6-letter words', help: 'Scores 4 points for every rank-4 (6-letter) word in the hand.' },
+  { key: 'fives', name: 'Fives', section: 'upper', hint: '7-letter words', help: 'Scores 5 points for every rank-5 (7-letter) word in the hand.' },
+  { key: 'sixes', name: 'Sixes', section: 'upper', hint: '8+ letter words', help: 'Scores 6 points for every rank-6 (8-or-more-letter) word in the hand.' },
+  { key: 'threeKind', name: 'Three of a Kind', section: 'lower', hint: '3+ words of one rank', help: 'At least three words of the same rank. Scores the sum of all five ranks. Four of a Kind and Rack Five both qualify.' },
+  { key: 'fourKind', name: 'Four of a Kind', section: 'lower', hint: '4+ words of one rank', help: 'At least four words of the same rank. Scores the sum of all five ranks. Rack Five qualifies.' },
+  { key: 'fullHouse', name: 'Full House', section: 'lower', hint: 'Two ranks, split 3 and 2', help: 'Exactly two distinct ranks in a 3-and-2 split. Scores 25. A Rack Five does not qualify — it has only one distinct rank.' },
+  { key: 'smallStraight', name: 'Small Straight', section: 'lower', hint: '4 consecutive ranks', help: 'Four distinct consecutive ranks. Scores 30. The fifth word can be anything, including a duplicate.' },
+  { key: 'largeStraight', name: 'Large Straight', section: 'lower', hint: '5 consecutive ranks', help: 'All five ranks distinct and consecutive. Scores 40.' },
+  { key: 'chance', name: 'Chance', section: 'lower', hint: 'Anything', help: 'Any hand. Scores the sum of all five ranks. The safety net for a ruined turn.' },
+  { key: 'rackFive', name: 'Rack Five', section: 'lower', hint: 'All 5 words the same rank', help: 'All five words share one rank. Scores 10 × that rank, so a rank-6 Rack Five pays 60.' }
+];
+
+function emptyCard() { const c = {}; CATS.forEach(x => { c[x.key] = null; }); return c; }
+
+const RANK_ROWS = [
+  { len: '3', r: '1' }, { len: '4', r: '2' }, { len: '5', r: '3' },
+  { len: '6', r: '4' }, { len: '7', r: '5' }, { len: '8+', r: '6' }
+];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'home', theme: 'feltwork',
+    saved: { turnNo: 7, meta: 'Medium · Standard · RF-7K4M2' },
+    bests: DEMO_BESTS,
+    setup: { difficulty: 'medium', timing: 'standard', seed: newSeed(), seedInput: '', custom: false },
+    run: null, turn: null, modal: null, toast: null, helpCat: null,
+    settings: { sort: 'draw', strict: false, reduceMotion: false, sound: true, haptics: true, instrument: false },
+    lb: { diff: 'medium', timing: 'all' },
+    lab: { budget: 40, refreshCount: 2, refreshCap: 10, upperThreshold: 63, upperPoints: 35, jumboMin: 9, jumboPer: 3, hintCost: 3, hintMax: 2, standardSecs: 180, blitzSecs: 90, blind: false, chanceTile: false, carryOver: false, powerLetters: false }
+  };
+
+  go = (screen) => this.setState({ screen });
+
+  componentDidMount() {
+    this._t = setInterval(() => {
+      const s = this.state;
+      if (s.screen !== 'game' || !s.turn || s.modal || s.turn.secondsLeft === null) return;
+      if (s.turn.secondsLeft <= 0) return;
+      const next = s.turn.secondsLeft - 1;
+      if (next > 0) { this.setState(p => ({ turn: Object.assign({}, p.turn, { secondsLeft: next }) })); return; }
+      // At the buzzer: tile interaction stops, the Build Bar empties back into the
+      // loose pile, and a category selection becomes required.
+      this.setState(p => {
+        const back = p.turn.build.map(x => (x.blank ? Object.assign({}, x, { letter: '' }) : x));
+        return {
+          turn: Object.assign({}, p.turn, {
+            secondsLeft: 0, expired: true, mode: 'build', build: [], refreshSel: [],
+            loose: p.turn.loose.concat(back), error: null
+          }),
+          modal: 'timeout'
+        };
+      });
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  cfg() { const l = this.state.lab; return l; }
+
+  startRun = () => {
+    const su = this.state.setup;
+    const d = RULESET.difficulty[su.difficulty];
+    const budget = su.custom ? this.state.lab.budget : d.budget;
+    const seed = (su.seedInput || '').trim() ? su.seedInput.trim().toUpperCase() : su.seed;
+    const run = {
+      runId: 'r' + Date.now(), seed, difficulty: su.difficulty, budget, timing: su.timing,
+      gameLength: 'full', isCustom: su.custom, rulesetVersion: RULESET.version, dictionary: 'TWL06 (demo subset)',
+      card: emptyCard(), wordBank: 0, jumboClaimed: false, jumboPoints: 0, jumboWord: '',
+      hintsUsed: 0, hintSpent: 0, turnNo: 1, history: [], startedAt: Date.now()
+    };
+    this.setState({ run, screen: 'game', modal: null, helpCat: null }, () => this.beginTurn(run, 1));
+  };
+
+  resumeSaved = () => {
+    // A real in-progress run always wins. The canned state below is only the
+    // cold-start case, so the returning-player screen can be reviewed.
+    if (this.state.run && this.state.turn) { this.setState({ screen: 'game' }); return; }
+    const card = emptyCard();
+    card.ones = 3; card.twos = 8; card.threes = 12; card.chance = 17; card.smallStraight = 30; card.threeKind = 16;
+    const run = {
+      runId: 'r-resume', seed: 'RF-7K4M2', difficulty: 'medium', budget: 40, timing: 'standard',
+      gameLength: 'full', isCustom: false, rulesetVersion: RULESET.version, dictionary: 'TWL06 (demo subset)',
+      card, wordBank: 142, jumboClaimed: false, jumboPoints: 0, jumboWord: '',
+      hintsUsed: 1, hintSpent: 3, turnNo: 7, history: [], startedAt: Date.now()
+    };
+    this.setState({ setup: Object.assign({}, this.state.setup, { difficulty: 'medium', timing: 'standard', custom: false }), run, screen: 'game' },
+      () => this.beginTurn(run, 7));
+  };
+
+  beginTurn(run, turnNo) {
+    const custom = this.state.setup.custom, lab = this.state.lab;
+    const refreshes = custom ? lab.refreshCount : RULESET.refresh.count;
+    const cap = custom ? lab.refreshCap : RULESET.refresh.maxTiles;
+    const { rack, queue } = drawTurn(run.seed, turnNo, run.budget, refreshes * cap);
+    const secs = run.timing === 'relaxed' ? null
+      : custom ? (run.timing === 'blitz' ? lab.blitzSecs : lab.standardSecs)
+               : RULESET.timingSeconds[run.timing];
+    this.setState({
+      turn: {
+        loose: rack, build: [], slots: [null, null, null, null, null], queue, queueIndex: 0,
+        refreshesLeft: refreshes,
+        secondsLeft: secs, mode: 'build', refreshSel: [], hintWord: null, error: null
+      },
+      modal: null,
+      saved: { turnNo, meta: (run.difficulty[0].toUpperCase() + run.difficulty.slice(1)) + ' · ' + run.timing + ' · ' + run.seed }
+    });
+  }
+
+  placedLetters() { const t = this.state.turn; return t ? t.slots.reduce((a, s) => a + (s ? s.word.length : 0), 0) : 0; }
+
+  tapLoose = (id) => {
+    const t = this.state.turn; if (!t || t.expired) return;
+    if (t.mode === 'refresh') {
+      const cap = this.state.setup.custom ? this.state.lab.refreshCap : RULESET.refresh.maxTiles;
+      const has = t.refreshSel.indexOf(id) >= 0;
+      if (!has && t.refreshSel.length >= cap) return;
+      const sel = has ? t.refreshSel.filter(x => x !== id) : t.refreshSel.concat([id]);
+      this.setState({ turn: Object.assign({}, t, { refreshSel: sel }) });
+      return;
+    }
+    const tile = t.loose.find(x => x.id === id); if (!tile) return;
+    this.setState({ turn: Object.assign({}, t, { loose: t.loose.filter(x => x.id !== id), build: t.build.concat([tile]), error: null }) });
+    if (tile.blank) this.setState({ modal: 'blank' });
+  };
+
+  // Functional update: pointermove fires far faster than React commits, so each
+  // reorder must compose off the latest build order, not a stale snapshot.
+  moveBuild = (from, to) => {
+    if (from === null || to === null || from === to) return;
+    this.setState(p => {
+      const t = p.turn;
+      if (!t || t.expired) return null;
+      if (from < 0 || to < 0 || from >= t.build.length || to >= t.build.length) return null;
+      const build = t.build.slice();
+      const [moved] = build.splice(from, 1);
+      build.splice(to, 0, moved);
+      return { turn: Object.assign({}, t, { build, error: null }) };
+    });
+  };
+
+  tapBuild = (id) => {
+    const t = this.state.turn; if (!t) return;
+    const tile = t.build.find(x => x.id === id); if (!tile) return;
+    const back = tile.blank ? Object.assign({}, tile, { letter: '' }) : tile;
+    this.setState({ turn: Object.assign({}, t, { build: t.build.filter(x => x.id !== id), loose: t.loose.concat([back]), error: null }) });
+  };
+
+  assignBlank = (letter) => {
+    const t = this.state.turn; if (!t) return;
+    const build = t.build.map(x => (x.blank && !x.letter ? Object.assign({}, x, { letter }) : x));
+    this.setState({ turn: Object.assign({}, t, { build }), modal: null });
+  };
+
+  clearBuild = () => {
+    const t = this.state.turn; if (!t) return;
+    const back = t.build.map(x => (x.blank ? Object.assign({}, x, { letter: '' }) : x));
+    this.setState({ turn: Object.assign({}, t, { build: [], loose: t.loose.concat(back), error: null }) });
+  };
+
+  undoBuild = () => {
+    const t = this.state.turn; if (!t || !t.build.length) return;
+    this.tapBuild(t.build[t.build.length - 1].id);
+  };
+
+  placeWord = () => {
+    const t = this.state.turn, run = this.state.run; if (!t || !run || t.expired) return;
+    const word = t.build.map(x => x.letter).join('');
+    const min = RULESET.minWordLength;
+    if (t.build.some(x => x.blank && !x.letter)) return this.setState({ turn: Object.assign({}, t, { error: 'Assign a letter to the blank tile before placing.' }) });
+    if (word.length < min) return this.setState({ turn: Object.assign({}, t, { error: 'Words need at least ' + min + ' letters.' }) });
+    if (t.slots.some(s => s && s.word === word)) return this.setState({ turn: Object.assign({}, t, { error: word + ' is already in this hand. The same word cannot appear twice in one turn.' }) });
+    if (this.state.settings.strict && !WORDSET.has(word.toLowerCase())) return this.setState({ turn: Object.assign({}, t, { error: word + ' is not in the demo dictionary. Try another arrangement, or turn off Strict dictionary in Settings.' }) });
+    const idx = t.slots.findIndex(s => !s);
+    if (idx < 0) return this.setState({ turn: Object.assign({}, t, { error: 'All five slots are filled. Dismantle one to change it.' }) });
+    const slot = {
+      word, letters: t.build.map(x => ({ c: x.letter, blank: x.blank })),
+      rank: rankOf(word.length), tileValue: t.build.reduce((a, x) => a + x.value, 0),
+      provisional: true, tiles: t.build.slice()
+    };
+    const slots = t.slots.slice(); slots[idx] = slot;
+    this.setState({
+      turn: Object.assign({}, t, { slots, build: [], error: null }),
+      helpCat: null
+    });
+  };
+
+  dismantle = (i) => {
+    const t = this.state.turn; if (!t) return;
+    if (t.expired) return;
+    const slot = t.slots[i]; if (!slot || !slot.provisional) return;
+    const back = slot.tiles.map(x => (x.blank ? Object.assign({}, x, { letter: '' }) : x));
+    const slots = t.slots.slice(); slots[i] = null;
+    this.setState({ turn: Object.assign({}, t, { slots, loose: t.loose.concat(back), error: null }), helpCat: null });
+  };
+
+  enterRefresh = () => {
+    const t = this.state.turn; if (!t || !t.refreshesLeft || t.expired) return;
+    // Build Bar tiles are still loose — return them so they can be discarded too.
+    const back = t.build.map(x => (x.blank ? Object.assign({}, x, { letter: '' }) : x));
+    this.setState({ turn: Object.assign({}, t, { mode: 'refresh', refreshSel: [], build: [], loose: t.loose.concat(back), error: null }) });
+  };
+  cancelRefresh = () => {
+    const t = this.state.turn; if (!t) return;
+    this.setState({ turn: Object.assign({}, t, { mode: 'build', refreshSel: [] }), modal: null });
+  };
+  askRefresh = () => { if (this.state.turn && this.state.turn.refreshSel.length) this.setState({ modal: 'refresh' }); };
+
+  confirmRefresh = () => {
+    const t = this.state.turn; if (!t) return;
+    const asked = t.refreshSel.length;
+    const incoming = t.queue.slice(t.queueIndex, t.queueIndex + asked);
+    // The replacement queue is finite. Never discard more tiles than we can replace —
+    // loose + placed must always equal the turn budget.
+    const n = incoming.length;
+    const discard = t.refreshSel.slice(0, n);
+    const loose = t.loose.filter(x => discard.indexOf(x.id) < 0).concat(incoming);
+    const slots = t.slots.map(s => (s ? Object.assign({}, s, { provisional: false }) : s));
+    this.setState({
+      turn: Object.assign({}, t, { loose, slots, queueIndex: t.queueIndex + n, refreshesLeft: t.refreshesLeft - 1, mode: 'build', refreshSel: [] }),
+      modal: null,
+      toast: n + ' tiles replaced. Placed words are now permanent.' + (n < asked ? ' (Replacement queue ran short at these Lab settings.)' : '')
+    });
+    setTimeout(() => this.setState({ toast: null }), 3200);
+  };
+
+  buyHint = (len) => {
+    const t = this.state.turn, run = this.state.run; if (!t || !run) return;
+    const cost = this.state.setup.custom ? this.state.lab.hintCost : RULESET.wordBank.hintCost;
+    const pool = {}; let blanks = 0;
+    t.loose.concat(t.build).forEach(x => { if (x.blank) blanks++; else pool[x.letter] = (pool[x.letter] || 0) + 1; });
+    let found = null;
+    for (let i = 0; i < WORDS.length; i++) {
+      const w = WORDS[i]; if (w.length !== len) continue;
+      const need = {}; let ok = true, wild = blanks;
+      for (const ch of w.toUpperCase()) need[ch] = (need[ch] || 0) + 1;
+      for (const ch in need) { const have = pool[ch] || 0; if (have < need[ch]) { wild -= need[ch] - have; if (wild < 0) { ok = false; break; } } }
+      if (ok) { found = w.toUpperCase(); break; }
+    }
+    this.setState({
+      run: Object.assign({}, run, { wordBank: Math.max(0, run.wordBank - cost), hintsUsed: run.hintsUsed + 1, hintSpent: run.hintSpent + cost }),
+      turn: Object.assign({}, t, { hintWord: found || 'no word of that length is reachable' }),
+      modal: 'hintresult'
+    });
+  };
+
+  previews() {
+    const t = this.state.turn; if (!t) return {};
+    return evaluate(t.slots.map(s => (s ? s.rank : 0)));
+  }
+
+  scoreCategory = (key) => {
+    const t = this.state.turn, run = this.state.run; if (!t || !run) return;
+    if (run.card[key] !== null) return;
+    const pv = this.previews();
+    const points = pv[key] || 0;
+    const slots = t.slots.map(s => (s ? Object.assign({}, s, { provisional: false }) : s));
+    const filled = slots.filter(Boolean);
+    const bankWord = filled.reduce((a, s) => (!a || s.tileValue > a.tileValue ? s : a), null);
+    const jMin = this.state.setup.custom ? this.state.lab.jumboMin : RULESET.jumbo.minLength;
+    const jPer = this.state.setup.custom ? this.state.lab.jumboPer : RULESET.jumbo.pointsPerLetter;
+    const jumboCand = run.jumboClaimed ? null : filled.find(s => s.word.length >= jMin);
+    const card = Object.assign({}, run.card); card[key] = points;
+    const nextRun = Object.assign({}, run, {
+      card, wordBank: run.wordBank + (bankWord ? bankWord.tileValue : 0),
+      jumboClaimed: run.jumboClaimed || !!jumboCand,
+      jumboPoints: jumboCand ? jumboCand.word.length * jPer : run.jumboPoints,
+      jumboWord: jumboCand ? jumboCand.word : run.jumboWord,
+      history: run.history.concat([{
+        turnNo: run.turnNo, ranks: slots.map(s => (s ? s.rank : 0)), words: filled.map(s => s.word),
+        category: key, points, banked: bankWord ? bankWord.word : '—', bankedValue: bankWord ? bankWord.tileValue : 0,
+        jumbo: !!jumboCand, refreshesUsed: (this.state.setup.custom ? this.state.lab.refreshCount : RULESET.refresh.count) - t.refreshesLeft,
+        empties: slots.filter(s => !s).length
+      }])
+    });
+    const done = CATS.every(c => nextRun.card[c.key] !== null);
+    this.setState({
+      run: nextRun, turn: Object.assign({}, t, { slots }),
+      modal: jumboCand ? 'jumbo' : 'turnsummary'
+    }, () => { if (done) this._finished = true; });
+  };
+
+  advance = () => {
+    const run = this.state.run;
+    const done = CATS.every(c => run.card[c.key] !== null);
+    if (done) { this.setState({ modal: null, screen: 'results', saved: null }); return; }
+    const nextRun = Object.assign({}, run, { turnNo: run.turnNo + 1 });
+    this.setState({ run: nextRun, modal: null }, () => this.beginTurn(nextRun, nextRun.turnNo));
+  };
+
+  cardTotals() {
+    const run = this.state.run; if (!run) return { upper: 0, bonus: 0, lower: 0, card: 0, total: 0 };
+    const th = this.state.setup.custom ? this.state.lab.upperThreshold : RULESET.difficulty[run.difficulty].upperBonusThreshold;
+    const bp = this.state.setup.custom ? this.state.lab.upperPoints : RULESET.upperBonusPoints;
+    let upper = 0, lower = 0;
+    CATS.forEach(c => { const v = run.card[c.key]; if (v === null) return; if (c.section === 'upper') upper += v; else lower += v; });
+    const bonus = upper >= th ? bp : 0;
+    const card = upper + bonus + lower;
+    return { upper, bonus, lower, card, threshold: th, total: card + run.wordBank + run.jumboPoints };
+  }
+
+  setupVals() {
+    const s = this.state, su = s.setup;
+    const pick = (on) =>
+      'display:flex;flex-direction:column;gap:4px;padding:16px 18px;min-height:96px;border-radius:var(--t-rad,10px);cursor:pointer;text-align:left;' +
+      (on
+        ? 'background:var(--t-acc-soft,rgba(233,201,138,.10));border:2px solid var(--t-acc,#d9a54c);'
+        : 'background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));');
+    const diffs = ['easy','medium','hard'].map(k => ({
+      key: k, name: k[0].toUpperCase() + k.slice(1),
+      letters: RULESET.difficulty[k].budget + ' letters',
+      blurb: RULESET.difficulty[k].blurb,
+      tag: k === 'medium' ? 'Default' : (k === 'hard' ? 'No rank-6 Rack Five' : ''),
+      style: pick(su.difficulty === k),
+      pickIt: () => this.setState({ setup: Object.assign({}, su, { difficulty: k }) })
+    }));
+    const times = [
+      { key: 'relaxed', name: 'Relaxed', letters: 'Untimed', blurb: 'Solo puzzle pace, good for learning' },
+      { key: 'standard', name: 'Standard', letters: '3 minutes per turn', blurb: 'The normal game' },
+      { key: 'blitz', name: 'Blitz', letters: '90 seconds per turn', blurb: 'For experienced word players' }
+    ].map(t => ({ ...t, tag: t.key === 'standard' ? 'Default' : '', style: pick(su.timing === t.key), pickIt: () => this.setState({ setup: Object.assign({}, su, { timing: t.key }) }) }));
+    return {
+      setupDiffs: diffs, setupTimes: times,
+      setupSeed: su.seed, setupSeedInput: su.seedInput,
+      onSeedInput: (e) => this.setState({ setup: Object.assign({}, su, { seedInput: e.target.value }) }),
+      rerollSeed: () => this.setState({ setup: Object.assign({}, su, { seed: newSeed(), seedInput: '' }) }),
+      setupCustom: su.custom,
+      rulesLabel: su.custom ? 'Custom Rules — this run will not enter standard leaderboards' : 'Standard Rules — leaderboard eligible',
+      rulesStyle: 'display:inline-flex;align-items:center;gap:9px;padding:9px 15px;border-radius:999px;font-size:13px;font-weight:600;' +
+        (su.custom ? 'background:rgba(217,165,76,.16);color:var(--t-acc-hi,#e9c98a);border:1px solid var(--t-acc,#d9a54c);' : 'background:var(--t-panel,rgba(0,0,0,.24));color:var(--t-muted,#8fa39a);border:1px solid var(--t-line,rgba(233,201,138,.14));'),
+      toggleCustom: () => this.setState({ setup: Object.assign({}, su, { custom: !su.custom }) }),
+      setupSummary: (su.difficulty[0].toUpperCase() + su.difficulty.slice(1)) + ' · ' + (RULESET.difficulty[su.difficulty].budget) + ' letters · ' +
+        (su.timing === 'relaxed' ? 'Untimed' : (su.timing === 'standard' ? '3:00 per turn' : '1:30 per turn')) + ' · 13 rounds',
+      hardWarning: su.difficulty === 'hard',
+      startRun: this.startRun,
+      goLab: () => this.go('lab')
+    };
+  }
+
+  gameVals() {
+    const s = this.state, t = s.turn, run = s.run;
+    if (!t || !run) return {};
+    const cap = s.setup.custom ? s.lab.refreshCap : RULESET.refresh.maxTiles;
+    const placed = this.placedLetters();
+    const looseCount = t.loose.length + t.build.length;
+    const anyPermanent = t.slots.some(x => x && !x.provisional);
+    const sorted = t.loose.slice();
+    if (s.settings.sort === 'az') sorted.sort((a, b) => (a.letter || 'Z~').localeCompare(b.letter || 'Z~'));
+    if (s.settings.sort === 'value') sorted.sort((a, b) => b.value - a.value || (a.letter || '').localeCompare(b.letter || ''));
+    const tileBase = 'position:relative;aspect-ratio:1;min-height:52px;display:grid;place-items:center;border-radius:var(--t-rad-sm,6px);cursor:pointer;user-select:none;';
+    const faceUp = 'background:var(--t-tile,linear-gradient(180deg,#f7f1e2 0%,#e5dbc4 100%));box-shadow:inset 0 1px 0 var(--t-tile-hi,#fffdf6),inset 0 -2px 0 var(--t-tile-lo,#cbbf9f),0 4px 8px rgba(0,0,0,.42);';
+    const marked = 'background:var(--t-tile,linear-gradient(180deg,#f7f1e2 0%,#e5dbc4 100%));box-shadow:inset 0 1px 0 var(--t-tile-hi,#fffdf6),0 0 0 3px var(--t-acc,#d9a54c),0 6px 14px rgba(0,0,0,.5);transform:translateY(-3px);opacity:.6;';
+    const pv = this.previews();
+    const totals = this.cardTotals();
+    const ranks = t.slots.map(x => (x ? x.rank : 0));
+
+    // Any open category can always be taken. Like Yahtzee, a player must be able to
+    // accept a lesser score (or a zero) rather than get stuck with no legal move.
+    const canScore = true;
+    const emptyCount = t.slots.filter(x => !x).length;
+    const hintCost = s.setup.custom ? s.lab.hintCost : RULESET.wordBank.hintCost;
+    const hintMax = s.setup.custom ? s.lab.hintMax : RULESET.wordBank.maxHints;
+    const mkRow = (c) => {
+      const used = run.card[c.key] !== null;
+      const val = used ? run.card[c.key] : (pv[c.key] || 0);
+      const qualifies = !used && val > 0;
+      const locked = used || !canScore;
+      const selected = s.helpCat === c.key && !used;
+      return {
+        key: c.key, name: c.name, hint: c.hint,
+        value: used ? String(run.card[c.key]) : (qualifies ? '+' + val : '+0'),
+        used, selected,
+        state: used ? '✓ Scored' : (selected ? 'Selected' : ''),
+        rowStyle: 'display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--t-rad-sm,6px);cursor:' + (locked ? 'default' : 'pointer') + ';' +
+          (used ? 'background:var(--t-inset,rgba(0,0,0,.32));color:var(--t-muted,#8fa39a);border-left:4px solid var(--t-ok,#8ec0ab);'
+                : selected ? 'background:var(--t-acc-soft,rgba(233,201,138,.14));color:var(--t-acc-hi,#e9c98a);border:2px solid var(--t-acc,#d9a54c);box-shadow:0 0 0 3px var(--t-acc-soft,rgba(233,201,138,.14));'
+                : qualifies ? 'background:var(--t-acc-soft,rgba(233,201,138,.10));border:1px solid var(--t-line-2,rgba(233,201,138,.34));'
+                            : 'background:var(--t-panel,rgba(0,0,0,.24));border:1px solid var(--t-line,rgba(233,201,138,.14));'),
+        valStyle: 'margin-left:auto;font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:17px;' +
+          (used ? 'color:var(--t-text,#ece7dc);' : (selected || qualifies) ? 'color:var(--t-acc-hi,#e9c98a);' : 'color:var(--t-dimmer,#4d635b);'),
+        stateStyle: 'font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;' +
+          (used ? 'color:var(--t-ok,#8ec0ab);' : 'color:var(--t-acc-hi,#e9c98a);'),
+        choose: () => (locked ? null : this.setState({ helpCat: c.key }))
+      };
+    };
+
+    const sortStyle = (k) => 'display:inline-flex;align-items:center;padding:7px 13px;font-size:13px;cursor:pointer;' +
+      (s.settings.sort === k ? 'background:var(--t-acc-soft,rgba(233,201,138,.14));color:var(--t-acc-hi,#e9c98a);box-shadow:inset 0 0 0 1px var(--t-acc,#d9a54c);font-weight:600;' : 'color:var(--t-muted,#8fa39a);');
+    // One list, one handler. The "best fits" chips are literally the same row
+    // objects as the scorecard rows, so they cannot diverge in behaviour.
+    const allRows = {}; CATS.forEach(c => { allRows[c.key] = mkRow(c); });
+    const bestPv = CATS.filter(c => run.card[c.key] === null).map(c => ({ c, v: pv[c.key] || 0 })).sort((a, b) => b.v - a.v).slice(0, 4);
+    const help = s.helpCat ? CATS.find(c => c.key === s.helpCat) : null;
+    const filled = t.slots.filter(Boolean);
+    const bankCand = filled.reduce((a, x) => (!a || x.tileValue > a.tileValue ? x : a), null);
+
+    return {
+      gDiff: run.difficulty[0].toUpperCase() + run.difficulty.slice(1),
+      gTurn: run.turnNo, gSeed: run.seed,
+      gTiming: run.timing === 'relaxed' ? 'Untimed' : run.timing[0].toUpperCase() + run.timing.slice(1),
+      gClock: t.secondsLeft === null ? '—:—' : Math.floor(t.secondsLeft / 60) + ':' + String(t.secondsLeft % 60).padStart(2, '0'),
+      gClockStyle: 'font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:26px;font-variant-numeric:tabular-nums;' +
+        (t.secondsLeft !== null && t.secondsLeft <= 30 ? 'color:var(--t-warn,#e2705a);' : 'color:var(--t-text,#ece7dc);'),
+      gLowTime: t.secondsLeft !== null && t.secondsLeft <= 30,
+      gBudgetLoose: looseCount, gBudgetPlaced: placed, gBudget: run.budget,
+      gPlacedLabel: anyPermanent ? 'permanent' : 'placed',
+      gBarPlaced: (placed / run.budget * 100) + '%',
+      gBarLoose: (looseCount / run.budget * 100) + '%',
+      gRefreshLeft: t.refreshesLeft, gRefreshCap: cap,
+      gRefreshDots: [1, 2, 3].slice(0, s.setup.custom ? s.lab.refreshCount : RULESET.refresh.count).map((n, i) => ({
+        style: 'width:11px;height:11px;border-radius:999px;' + (i < t.refreshesLeft ? 'background:var(--t-acc,#d9a54c);box-shadow:0 0 8px rgba(217,165,76,.6);' : 'background:var(--t-inset,rgba(0,0,0,.32));box-shadow:inset 0 0 0 1px var(--t-line,rgba(233,201,138,.14));')
+      })),
+      gWordBank: run.wordBank,
+      gJumboShort: run.jumboClaimed ? run.jumboWord + ' +' + run.jumboPoints : 'Open · 9+ letters',
+      gHints: hintMax - run.hintsUsed,
+      gRefreshMode: t.mode === 'refresh',
+      gSelCount: t.refreshSel.length,
+      gLoose: sorted.map(x => ({
+        id: x.id, l: x.blank ? '' : x.letter, v: x.blank ? '' : x.value, isBlank: x.blank,
+        style: tileBase + (t.mode === 'refresh' && t.refreshSel.indexOf(x.id) >= 0 ? marked : faceUp),
+        tap: () => this.tapLoose(x.id)
+      })),
+      gBuild: t.build.map((x, i) => ({
+        id: x.id, l: x.letter || '?', v: x.blank ? 0 : x.value, isBlank: x.blank, needs: x.blank && !x.letter,
+        bi: String(i),
+        // Pointer events, not HTML5 drag — dragstart never fires on touch, and this
+        // is a tablet-first design. A press that never moves 8px is treated as a tap.
+        onPointerDown: (e) => {
+          if (this.state.turn && this.state.turn.expired) return;
+          this._pd = { i, x: e.clientX, y: e.clientY, moved: false, id: x.id };
+          try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) { /* no capture available */ }
+        },
+        onPointerMove: (e) => {
+          const pd = this._pd; if (!pd) return;
+          // A mouse move with no button held means we missed the pointerup — drop the drag.
+          if (e.pointerType === 'mouse' && e.buttons === 0) { this._pd = null; return; }
+          if (!pd.moved && Math.abs(e.clientX - pd.x) < 8 && Math.abs(e.clientY - pd.y) < 8) return;
+          pd.moved = true;
+          const el = document.elementFromPoint(e.clientX, e.clientY);
+          const host = el && el.closest ? el.closest('[data-bi]') : null;
+          if (!host) return;
+          const to = Number(host.getAttribute('data-bi'));
+          if (!isNaN(to) && to !== pd.i) { this.moveBuild(pd.i, to); pd.i = to; }
+        },
+        onPointerUp: (e) => {
+          const pd = this._pd; this._pd = null;
+          try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (err) { /* nothing captured */ }
+          if (pd && !pd.moved) this.tapBuild(pd.id);
+        },
+        onPointerCancel: () => { this._pd = null; },
+        style: 'position:relative;width:54px;height:54px;display:grid;place-items:center;border-radius:var(--t-rad-sm,6px);cursor:grab;touch-action:none;user-select:none;transform:translateY(-2px);' +
+          (x.blank ? 'background:var(--t-blank,linear-gradient(180deg,#e6f0e6,#cbdcce));box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 0 0 2px var(--t-blank-bd,#8ec0ab),0 5px 10px rgba(0,0,0,.5);'
+                   : 'background:var(--t-tile,linear-gradient(180deg,#fffaee,#eee4cd));box-shadow:inset 0 1px 0 var(--t-tile-hi,#fff),0 0 0 1px var(--t-line-2,rgba(233,201,138,.5)),0 5px 10px rgba(0,0,0,.5);'),
+        tap: () => this.tapBuild(x.id)
+      })),
+      gBuildEmpty: t.build.length === 0,
+      gBuildHasTiles: t.build.length > 1,
+      gBuildWord: t.build.map(x => x.letter || '·').join(''),
+      gBuildLen: t.build.length,
+      gBuildRank: rankOf(t.build.length),
+      gBuildValue: t.build.reduce((a, x) => a + x.value, 0),
+      gError: t.error,
+      gHasError: !!t.error,
+      gSlots: t.slots.map((x, i) => ({
+        n: i + 1, filled: !!x, empty: !x,
+        word: x ? x.word : '', rank: x ? x.rank : 0, tileValue: x ? x.tileValue : 0,
+        letters: x ? x.letters.map(L => ({ c: L.c, style: 'width:24px;height:28px;border-radius:4px;display:grid;place-items:center;font-family:var(--t-fd,sans-serif);font-weight:600;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.35);' + (L.blank ? 'background:var(--t-blank,linear-gradient(180deg,#e6f0e6,#cbdcce));color:var(--t-blank-text,#1d3a2c);' : 'background:var(--t-tile,linear-gradient(180deg,#f7f1e2,#e5dbc4));color:var(--t-tile-text,#1d2b25);') })) : [],
+        isMoney: !!x && !!bankCand && x.word === bankCand.word,
+        status: x ? (x.provisional ? '✎ Provisional · tap to edit' : '🔒 Permanent') : 'Empty → scores rank 0',
+        style: 'display:flex;flex-direction:column;padding:11px 13px;min-height:150px;border-radius:var(--t-rad,10px);' +
+          (!x ? 'background:var(--t-inset,rgba(0,0,0,.32));box-shadow:inset 0 2px 8px rgba(0,0,0,.5);'
+              : x.provisional ? 'background:var(--t-acc-soft,rgba(233,201,138,.09));border:2px dashed var(--t-acc,#d9a54c);cursor:pointer;'
+                              : 'background:var(--t-panel-2,rgba(233,201,138,.07));border:2px solid var(--t-acc,#d9a54c);'),
+        statusStyle: 'margin-top:6px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' +
+          (!x ? 'color:var(--t-dimmer,#4d635b);' : 'color:var(--t-acc,#d9a54c);'),
+        tap: () => this.dismantle(i)
+      })),
+      gRanksLine: ranks.join(' · '),
+      gFilledCount: filled.length,
+      gNextStep: t.slots.every(Boolean)
+        ? 'All five words are in. Now choose one scorecard category to bank this hand.'
+        : t.expired ? 'Time is up. Choose one category to close the turn.'
+        : t.refreshesLeft === 0 ? 'No refreshes left — you can finish now and let empty slots score rank 0.'
+        : 'Keep building — ' + (5 - filled.length) + ' slot' + (5 - filled.length === 1 ? '' : 's') + ' to go. Or refresh, or take any open category now and let the empty slots score rank 0.',
+
+      gPreviewChips: bestPv.map(p => ({
+        label: p.c.name, value: '+' + p.v,
+        pickIt: allRows[p.c.key].choose,
+        style: 'display:inline-flex;align-items:center;gap:6px;padding:7px 13px;min-height:40px;border-radius:var(--t-rad-sm,6px);font-size:13px;cursor:' + (canScore ? 'pointer' : 'default') + ';' +
+          (s.helpCat === p.c.key ? 'border:2px solid var(--t-acc,#d9a54c);background:var(--t-acc-soft,rgba(233,201,138,.14));color:var(--t-acc-hi,#e9c98a);font-weight:600;'
+            : !canScore ? 'border:1px solid var(--t-line,rgba(233,201,138,.14));color:var(--t-dim,#6f8a80);opacity:.55;'
+            : p.v > 0 ? 'border:1px solid var(--t-line-2,rgba(233,201,138,.34));background:var(--t-acc-soft,rgba(233,201,138,.1));color:var(--t-acc-hi,#e9c98a);'
+                   : 'border:1px solid var(--t-line,rgba(233,201,138,.14));color:var(--t-dim,#6f8a80);')
+      })),
+      gUpper: CATS.filter(c => c.section === 'upper').map(c => allRows[c.key]),
+      gLower: CATS.filter(c => c.section === 'lower').map(c => allRows[c.key]),
+      gOpenCount: CATS.filter(c => run.card[c.key] === null).length,
+      gUpperSub: totals.upper, gUpperThreshold: totals.threshold, gBonus: totals.bonus,
+      gCardTotal: totals.card, gRunTotal: totals.total,
+      gHasEmpties: emptyCount > 0,
+      gEmptyWarn: emptyCount === 1 ? '1 empty slot will score rank 0.' : emptyCount + ' empty slots will score rank 0.',
+      gScoreHintText: t.expired ? 'Time is up — empty slots score rank 0. Choose one open category to finish the turn.'
+        : emptyCount === 0 ? 'All five words in. Tap any open category to take it.'
+        : 'You can take any open category at any time — stuck hands score the empty slots as rank 0.',
+      gCanEnterRefresh: t.mode !== 'refresh' && t.refreshesLeft > 0 && !t.expired,
+      gExpired: !!t.expired,
+      gRefreshBlocked: t.mode !== 'refresh' && (t.refreshesLeft === 0 || !!t.expired),
+      gRefreshBlockedText: t.expired ? 'Time is up — no more refreshes' : 'No refreshes left this turn',
+      gHintCost: hintCost, gHintMaxLabel: hintMax === 1 ? 'One hint per game' : hintMax + ' hints per game',
+      gHintBtnStyle: 'display:inline-flex;align-items:center;justify-content:center;min-height:44px;font-size:14px;border:1px solid var(--t-line,rgba(233,201,138,.14));border-radius:var(--t-btn-rad,6px);color:var(--t-muted,#8fa39a);' +
+        ((t.expired || run.hintsUsed >= hintMax) ? 'opacity:.45;cursor:not-allowed;' : 'cursor:pointer;'),
+      gHelpCat: help ? help.name : '', gHelpText: help ? help.help : '', gHasHelp: !!help && canScore,
+      gHelpPoints: help ? '+' + (pv[help.key] || 0) + ' with this hand' : '',
+      clearHelp: () => this.setState({ helpCat: null }),
+      confirmScore: () => { const k = s.helpCat; this.setState({ modal: null, helpCat: null }, () => this.scoreCategory(k)); },
+      sortDraw: () => this.setState({ settings: Object.assign({}, s.settings, { sort: 'draw' }) }),
+      sortAz: () => this.setState({ settings: Object.assign({}, s.settings, { sort: 'az' }) }),
+      sortValue: () => this.setState({ settings: Object.assign({}, s.settings, { sort: 'value' }) }),
+      sortStyle0: sortStyle('draw'), sortStyle1: sortStyle('az'), sortStyle2: sortStyle('value'),
+      rankRows: RANK_ROWS,
+      placeWord: this.placeWord, undoBuild: this.undoBuild, clearBuild: this.clearBuild,
+      enterRefresh: this.enterRefresh, cancelRefresh: this.cancelRefresh, askRefresh: this.askRefresh,
+      confirmRefresh: this.confirmRefresh, advance: this.advance,
+      openHint: () => { if (!t.expired && run.hintsUsed < hintMax) this.setState({ modal: 'hint' }); },
+      closeModal: () => this.setState({ modal: null }),
+      hintLens: [3, 4, 5, 6, 7, 8].map(n => ({ n, rank: rankOf(n), pickIt: () => this.buyHint(n) })),
+      gHintWord: t.hintWord || '',
+      mRefresh: s.modal === 'refresh', mBlank: s.modal === 'blank', mHint: s.modal === 'hint',
+      mHintResult: s.modal === 'hintresult', mJumbo: s.modal === 'jumbo', mSummary: s.modal === 'turnsummary',
+      mTimeout: s.modal === 'timeout',
+      mAnyModal: !!s.modal && s.screen === 'game',
+      gToast: s.toast, gHasToast: !!s.toast,
+      blankLetters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(L => ({ L, pickIt: () => this.assignBlank(L) })),
+      gLastTurn: run.history.length ? run.history[run.history.length - 1] : null,
+      gLastCat: run.history.length ? (CATS.find(c => c.key === run.history[run.history.length - 1].category) || {}).name : '',
+      gLastPoints: run.history.length ? run.history[run.history.length - 1].points : 0,
+      gLastBanked: run.history.length ? run.history[run.history.length - 1].banked : '',
+      gLastBankedValue: run.history.length ? run.history[run.history.length - 1].bankedValue : 0,
+      gLastRanks: run.history.length ? run.history[run.history.length - 1].ranks.join(' · ') : '',
+      gJumboWord: run.jumboWord, gJumboPoints: run.jumboPoints,
+      gIsLastTurn: CATS.filter(c => run.card[c.key] === null).length === 0
+    };
+  }
+
+  resultsVals() {
+    const s = this.state, run = s.run;
+    if (!run) return {};
+    const t = this.cardTotals();
+    const mine = s.bests.filter(b => b.difficulty === run.difficulty && !b.custom);
+    const beaten = mine.filter(b => b.score < t.total).length;
+    const place = mine.length - beaten + 1;
+    const isPB = mine.every(b => b.score < t.total);
+    return {
+      rFinal: t.total, rCard: t.card, rUpper: t.upper, rBonus: t.bonus, rLower: t.lower,
+      rBank: run.wordBank, rJumbo: run.jumboPoints, rJumboWord: run.jumboWord || '—',
+      rHintCost: run.hintSpent, rHints: run.hintsUsed,
+      rDiff: run.difficulty[0].toUpperCase() + run.difficulty.slice(1),
+      rTiming: run.timing[0].toUpperCase() + run.timing.slice(1),
+      rSeed: run.seed, rRuleset: run.rulesetVersion, rDict: run.dictionary,
+      rCustom: run.isCustom, rStandard: !run.isCustom,
+      rIsPB: isPB, rPlace: place <= mine.length + 1 ? '#' + place : '—',
+      rPlaceLine: 'Local ' + run.difficulty + ' board · ' + run.timing,
+      rShare: 'Try my Rack Five run: ' + run.difficulty + ', ' + run.timing + ', seed ' + run.seed + '. I scored ' + t.total + '.',
+      rCardRows: CATS.map(c => ({
+        name: c.name, value: run.card[c.key] === null ? '—' : String(run.card[c.key]),
+        section: c.section,
+        style: 'display:flex;align-items:center;gap:10px;padding:7px 11px;border-radius:var(--t-rad-sm,6px);font-size:13px;' +
+          (run.card[c.key] ? 'background:var(--t-panel,rgba(0,0,0,.24));' : 'background:var(--t-inset,rgba(0,0,0,.32));color:var(--t-dim,#6f8a80);')
+      })),
+      rTurns: run.history.map(h => ({
+        turnNo: h.turnNo, words: h.words.join('  ') || '—', ranks: h.ranks.join(' · '),
+        category: (CATS.find(c => c.key === h.category) || {}).name || '', points: h.points,
+        banked: h.banked, bankedValue: h.bankedValue, empties: h.empties
+      })),
+      rReplay: () => { const su = Object.assign({}, s.setup, { seedInput: run.seed }); this.setState({ setup: su }, this.startRun); },
+      rAnother: () => this.go('setup'),
+      rShareIt: () => { this.setState({ toast: 'Run code copied — RF share codes carry the seed, difficulty and ruleset version.' }); setTimeout(() => this.setState({ toast: null }), 3400); },
+      rToast: s.toast, rHasToast: !!s.toast
+    };
+  }
+
+  otherVals() {
+    const s = this.state;
+    const tabStyle = (on) => 'display:inline-flex;align-items:center;min-height:42px;padding:0 18px;border-radius:var(--t-btn-rad,6px);font-family:var(--t-fd,sans-serif);font-weight:var(--t-fwd,700);font-size:14px;cursor:pointer;' +
+      (on ? 'background:var(--t-acc-soft,rgba(233,201,138,.14));color:var(--t-acc-hi,#e9c98a);border:2px solid var(--t-acc,#d9a54c);' : 'color:var(--t-muted,#8fa39a);border:1px solid var(--t-line,rgba(233,201,138,.14));');
+    const pillStyle = (on) => 'display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border-radius:999px;font-size:13px;cursor:pointer;' +
+      (on ? 'background:var(--t-acc-soft,rgba(233,201,138,.14));color:var(--t-acc-hi,#e9c98a);border:1px solid var(--t-acc,#d9a54c);' : 'color:var(--t-muted,#8fa39a);border:1px solid var(--t-line,rgba(233,201,138,.14));');
+    const rows = s.bests
+      .filter(b => b.difficulty === s.lb.diff)
+      .filter(b => s.lb.timing === 'all' || b.timing === s.lb.timing)
+      .sort((a, b) => b.score - a.score || a.hints - b.hints || a.mins - b.mins);
+    const set = (patch) => this.setState({ lb: Object.assign({}, s.lb, patch) });
+    const labRow = (key, label, unit, min, max, step) => ({
+      key, label, unit, value: s.lab[key], min, max, step,
+      onInput: (e) => this.setState({ lab: Object.assign({}, s.lab, { [key]: Number(e.target.value) }) })
+    });
+    const variant = (key, name, desc) => ({
+      key, name, desc, on: s.lab[key],
+      style: 'position:relative;width:46px;height:26px;flex:none;border-radius:999px;cursor:pointer;transition:background .15s;' +
+        (s.lab[key] ? 'background:var(--t-acc,#d9a54c);' : 'background:var(--t-inset,rgba(0,0,0,.4));box-shadow:inset 0 0 0 1px var(--t-line,rgba(233,201,138,.2));'),
+      knobStyle: 'position:absolute;top:3px;left:' + (s.lab[key] ? '23px' : '3px') + ';width:20px;height:20px;border-radius:999px;background:' + (s.lab[key] ? '#1d2b25' : 'var(--t-dim,#6f8a80)') + ';transition:left .15s',
+      toggle: () => this.setState({ lab: Object.assign({}, s.lab, { [key]: !s.lab[key] }) })
+    });
+    const toggles = [
+      { key: 'sound', name: 'Sound effects', desc: 'Tile clicks, placement, scoring' },
+      { key: 'haptics', name: 'Haptics', desc: 'Vibration on placement and commitment' },
+      { key: 'reduceMotion', name: 'Reduced motion', desc: 'Removes tile lift and celebration animation' },
+      { key: 'strict', name: 'Strict dictionary', desc: 'Off in the prototype so play never blocks. On shows the real invalid-word feedback.' },
+      { key: 'instrument', name: 'Playtest instrumentation', desc: 'Asks which category you are aiming for, and how each turn felt' }
+    ].map(x => ({
+      name: x.name, desc: x.desc, on: s.settings[x.key],
+      style: 'position:relative;width:46px;height:26px;flex:none;border-radius:999px;cursor:pointer;' +
+        (s.settings[x.key] ? 'background:var(--t-acc,#d9a54c);' : 'background:var(--t-inset,rgba(0,0,0,.4));box-shadow:inset 0 0 0 1px var(--t-line,rgba(233,201,138,.2));'),
+      knobStyle: 'position:absolute;top:3px;left:' + (s.settings[x.key] ? '23px' : '3px') + ';width:20px;height:20px;border-radius:999px;background:' + (s.settings[x.key] ? '#1d2b25' : 'var(--t-dim,#6f8a80)'),
+      toggle: () => this.setState({ settings: Object.assign({}, s.settings, { [x.key]: !s.settings[x.key] }) })
+    }));
+    return {
+      isLeaderboards: s.screen === 'leaderboards', isHowto: s.screen === 'howto',
+      isSettings: s.screen === 'settings', isLab: s.screen === 'lab',
+      lbTabs: ['easy', 'medium', 'hard'].map(k => ({ label: k[0].toUpperCase() + k.slice(1), style: tabStyle(s.lb.diff === k), pickIt: () => set({ diff: k }) })),
+      lbTiming: ['all', 'relaxed', 'standard', 'blitz'].map(k => ({ label: k === 'all' ? 'All timings' : k[0].toUpperCase() + k.slice(1), style: pillStyle(s.lb.timing === k), pickIt: () => set({ timing: k }) })),
+      lbRows: rows.map((b, i) => ({
+        rank: i + 1, score: b.score, date: b.date, seed: b.seed, timing: b.timing[0].toUpperCase() + b.timing.slice(1),
+        card: b.card, bank: b.bank, jumbo: b.jumbo, upper: b.upper, mins: b.mins + ' min', hints: b.hints,
+        custom: b.custom, standard: !b.custom
+      })),
+      lbEmpty: rows.length === 0,
+      lbDiffName: s.lb.diff[0].toUpperCase() + s.lb.diff.slice(1),
+      themeCards: THEME_ORDER.map(k => ({
+        key: k, name: THEMES[k].name, kicker: THEMES[k].kicker, mood: THEMES[k].mood,
+        on: s.theme === k,
+        style: 'display:flex;flex-direction:column;gap:0;overflow:hidden;border-radius:var(--t-rad,10px);cursor:pointer;' +
+          (s.theme === k ? 'border:2px solid var(--t-acc,#d9a54c);box-shadow:0 0 0 4px var(--t-acc-soft,rgba(233,201,138,.1));' : 'border:1px solid var(--t-line,rgba(233,201,138,.14));'),
+        previewStyle: 'height:112px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;background:' + THEMES[k].vars['--t-bg'] + ';background-image:' + THEMES[k].vars['--t-bg-grad'] + ';',
+        chipStyle: 'display:inline-flex;align-self:flex-start;align-items:center;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:' + THEMES[k].vars['--t-acc-soft'] + ';color:' + THEMES[k].vars['--t-acc'] + ';',
+        tileStyles: ['R', 'F', '5'].map(() => 'width:30px;height:34px;border-radius:' + THEMES[k].vars['--t-rad-sm'] + ';background:' + THEMES[k].vars['--t-tile'] + ';box-shadow:inset 0 1px 0 ' + THEMES[k].vars['--t-tile-hi'] + ',0 3px 6px rgba(0,0,0,.35);display:grid;place-items:center;font-family:' + THEMES[k].vars['--t-fd'] + ';font-weight:600;font-size:16px;color:' + THEMES[k].vars['--t-tile-text'] + ';'),
+        barStyle: 'height:5px;width:60%;border-radius:999px;background:' + THEMES[k].vars['--t-acc'] + ';',
+        footStyle: 'padding:12px 15px;background:var(--t-panel,rgba(0,0,0,.24));',
+        pickIt: () => this.setState({ theme: k })
+      })),
+      settingToggles: toggles,
+      sortPrefs: ['draw', 'az', 'value'].map(k => ({
+        label: k === 'draw' ? 'Draw order' : (k === 'az' ? 'A–Z' : 'Tile value'),
+        style: pillStyle(s.settings.sort === k),
+        pickIt: () => this.setState({ settings: Object.assign({}, s.settings, { sort: k }) })
+      })),
+      labLetters: [labRow('budget', 'Turn budget', 'letters', 25, 60, 1), labRow('refreshCount', 'Refreshes per turn', '', 0, 4, 1), labRow('refreshCap', 'Max tiles per refresh', 'tiles', 1, 20, 1)],
+      labScoring: [labRow('upperThreshold', 'Upper-bonus threshold', 'pts', 30, 100, 1), labRow('upperPoints', 'Upper-bonus value', 'pts', 0, 80, 5), labRow('jumboMin', 'Jumbo minimum length', 'letters', 7, 14, 1), labRow('jumboPer', 'Jumbo points per letter', 'pts', 1, 8, 1)],
+      labAssist: [labRow('hintCost', 'Hint cost', 'pts', 0, 15, 1), labRow('hintMax', 'Max hints per game', '', 0, 6, 1)],
+      labPace: [labRow('standardSecs', 'Standard turn', 'sec', 60, 420, 10), labRow('blitzSecs', 'Blitz turn', 'sec', 30, 240, 10)],
+      labVariants: [
+        variant('blind', 'Blind Declaration', 'Name a target category before the rack is revealed. It scores full value; anything else scores half.'),
+        variant('chanceTile', 'Chance Scores Tile Value', 'Chance pays the summed tile value of all five words instead of the rank sum.'),
+        variant('carryOver', 'Carry-Over', 'Keep up to five unspent tiles into the next turn.'),
+        variant('powerLetters', 'Power Letters', 'The first permanent word each turn containing a real J, Q, X or Z earns one free single-tile swap.')
+      ],
+      labReset: () => this.setState({ lab: { budget: 40, refreshCount: 2, refreshCap: 10, upperThreshold: 63, upperPoints: 35, jumboMin: 9, jumboPer: 3, hintCost: 3, hintMax: 2, standardSecs: 180, blitzSecs: 90, blind: false, chanceTile: false, carryOver: false, powerLetters: false } }),
+      labChanged: JSON.stringify(s.lab) !== JSON.stringify({ budget: 40, refreshCount: 2, refreshCap: 10, upperThreshold: 63, upperPoints: 35, jumboMin: 9, jumboPer: 3, hintCost: 3, hintMax: 2, standardSecs: 180, blitzSecs: 90, blind: false, chanceTile: false, carryOver: false, powerLetters: false }),
+      goSettings: () => this.go('settings'),
+      goLab2: () => this.go('lab'),
+      exportData: () => { this.setState({ toast: 'Exported ' + this.state.bests.length + ' games as JSON + CSV summary (prototype stub).' }); setTimeout(() => this.setState({ toast: null }), 3400); },
+      oToast: s.toast, oHasToast: !!s.toast,
+      rankRows2: RANK_ROWS,
+      howUpper: CATS.filter(c => c.section === 'upper').map((c, i) => ({ name: c.name, hint: c.hint, pay: (i + 1) + ' / word' })),
+      howLower: [
+        { name: 'Three of a Kind', hint: '3+ of one rank', pay: 'Sum of ranks' },
+        { name: 'Four of a Kind', hint: '4+ of one rank', pay: 'Sum of ranks' },
+        { name: 'Full House', hint: 'Two ranks, 3 and 2', pay: '25' },
+        { name: 'Small Straight', hint: '4 consecutive', pay: '30' },
+        { name: 'Large Straight', hint: '5 consecutive', pay: '40' },
+        { name: 'Chance', hint: 'Anything', pay: 'Sum of ranks' },
+        { name: 'Rack Five', hint: 'All 5 same rank', pay: '10 × rank' }
+      ]
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const th = THEMES[s.theme];
+    const mine = s.bests.filter(b => !b.custom);
+    const best = mine.reduce((a, b) => (b.score > a.score ? b : a), mine[0]);
+    const navStyle = (active) =>
+      'display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:var(--t-btn-rad,6px);font-size:14px;cursor:pointer;white-space:nowrap;' +
+      (active
+        ? 'background:var(--t-acc-soft,rgba(233,201,138,.10));color:var(--t-acc-hi,#e9c98a);font-weight:600;'
+        : 'color:var(--t-muted,#8fa39a);');
+    const tileStyle = 'position:relative;flex:1;aspect-ratio:1;display:grid;place-items:center;border-radius:var(--t-rad-sm,6px);background:var(--t-tile,linear-gradient(180deg,#f7f1e2 0%,#e5dbc4 100%));box-shadow:inset 0 1px 0 var(--t-tile-hi,#fffdf6),inset 0 -2px 0 var(--t-tile-lo,#cbbf9f),0 4px 9px rgba(0,0,0,.4)';
+
+    return {
+      themeStyle: varString(s.theme),
+      themeName: th.name,
+      cycleTheme: () => this.setState(p => ({ theme: THEME_ORDER[(THEME_ORDER.indexOf(p.theme) + 1) % THEME_ORDER.length] })),
+      navItems: NAV.map(n => ({ label: n.label, style: navStyle(s.screen === n.key || (n.key === 'setup' && s.screen === 'game')), go: () => this.go(n.key) })),
+      isHome: s.screen === 'home',
+      isSetup: s.screen === 'setup',
+      isGame: s.screen === 'game' && !!s.turn,
+      isResults: s.screen === 'results',
+      ...this.setupVals(),
+      ...this.gameVals(),
+      ...this.resultsVals(),
+      ...this.otherVals(),
+      goHome: () => this.go('home'),
+      goSetup: () => this.go('setup'),
+      openSeedEntry: () => this.go('setup'),
+      resumeRun: this.resumeSaved,
+      hasSaved: !!s.saved,
+      savedTurn: s.saved ? s.saved.turnNo : 1,
+      savedMeta: s.saved ? s.saved.meta : '',
+      heroTiles: [
+        { l: 'R', v: 1 }, { l: 'A', v: 1 }, { l: 'C', v: 3 }, { l: 'K', v: 5 }, { l: '5', v: '' }
+      ].map(t => ({ l: t.l, v: t.v, style: tileStyle })),
+      comingTilesA: ['T', 'O', 'D', 'A', 'Y', '?'],
+      bestScore: best ? best.score : '—',
+      bestMeta: best ? (best.difficulty[0].toUpperCase() + best.difficulty.slice(1) + ' · ' + best.timing + ' · ' + best.date) : 'No completed runs yet',
+      gamesPlayed: mine.length,
+      bonusRate: Math.round((mine.filter(b => b.upper > 0).length / Math.max(1, mine.length)) * 100) + '%',
+      rulesetVersion: RULESET.version
+    };
+  }
+}
+
+</script>
+</body>
+</html>

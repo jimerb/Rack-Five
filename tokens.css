@@ -1,0 +1,145 @@
+/* Rack Five — design tokens.
+   Three themes as CSS custom properties. Apply one block to the app root.
+   Every text colour clears WCAG AA 4.5:1 against the surface it sits on. */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+
+@keyframes r5pop   { 0% { transform: scale(.82); opacity: 0 } 60% { transform: scale(1.04) } 100% { transform: scale(1); opacity: 1 } }
+@keyframes r5rise  { 0% { transform: translateY(10px); opacity: 0 } 100% { transform: translateY(0); opacity: 1 } }
+@keyframes r5glow  { 0%, 100% { box-shadow: 0 0 0 rgba(233,201,138,0) } 50% { box-shadow: 0 0 22px rgba(233,201,138,.45) } }
+@keyframes r5pulse { 0%, 100% { outline-color: rgba(233,201,138,0) } 50% { outline-color: rgba(233,201,138,.8) } }
+
+/* ── Feltwork — default. Deep felt table, ivory tiles, brass. ─────────────── */
+[data-theme="feltwork"] {
+  --t-bg: #0e1a17;
+  --t-bg-grad: radial-gradient(130% 100% at 50% -10%, #183029 0%, #0e1a17 62%);
+  --t-tex: repeating-linear-gradient(45deg, rgba(255,255,255,.012) 0 2px, transparent 2px 4px);
+  --t-panel: rgba(0,0,0,.24);
+  --t-panel-2: rgba(233,201,138,.07);
+  --t-inset: rgba(0,0,0,.32);
+  --t-line: rgba(233,201,138,.14);
+  --t-line-2: rgba(233,201,138,.34);
+  --t-text: #ece7dc;
+  --t-muted: #8fa39a;   /* 7.0:1  */
+  --t-dim: #7e968b;     /* 5.9:1  */
+  --t-dimmer: #6e877d;  /* 4.8:1  */
+  --t-acc: #d9a54c;
+  --t-acc-hi: #e9c98a;
+  --t-acc-soft: rgba(233,201,138,.10);
+  --t-second: #8ec0ab;
+  --t-second-deep: #2f6b52;
+  --t-ok: #8ec0ab;
+  --t-warn: #e2705a;
+  --t-warn-soft: rgba(226,112,90,.16);
+  --t-toast: #14231e;
+  --t-blank: linear-gradient(180deg, #e6f0e6, #cbdcce);
+  --t-blank-bd: #8ec0ab;
+  --t-blank-text: #1d3a2c;
+  --t-tile: linear-gradient(180deg, #f7f1e2 0%, #e5dbc4 100%);
+  --t-tile-hi: #fffdf6;
+  --t-tile-lo: #cbbf9f;
+  --t-tile-text: #1d2b25;
+  --t-tile-val: #7c8a7f;
+  --t-rad: 10px;
+  --t-rad-sm: 6px;
+  --t-fd: 'Space Grotesk', system-ui, sans-serif;
+  --t-fb: 'IBM Plex Sans', system-ui, sans-serif;
+  --t-fwd: 700;
+  --t-btn-bg: linear-gradient(180deg, #e0b263, #b4842f);
+  --t-btn-fg: #1d2b25;
+  --t-btn-bd: transparent;
+  --t-btn-sh: 0 3px 0 #7d5b1f;
+  --t-btn-rad: 6px;
+}
+
+/* ── Midnight — derived from the Nocturne design system. ──────────────────── */
+/* Nocturne is mono: one accent, carried as line and glow, never as a flood.
+   Primary buttons are an accent OUTLINE on transparent. Neutral text steps are
+   ramp 400/500 — neutral-600 fails contrast on this ground and is not used. */
+[data-theme="midnight"] {
+  --t-bg: #161826;
+  --t-bg-grad: radial-gradient(120% 90% at 15% 0%, #1e2133 0%, #161826 60%);
+  --t-tex: none;
+  --t-panel: #232532;
+  --t-panel-2: #2b2741;
+  --t-inset: #1b1d29;
+  --t-line: rgba(233,233,237,.16);
+  --t-line-2: #9184d9;
+  --t-text: #e9e9ed;
+  --t-muted: #b2b6ca;   /* neutral-400 — 7.6:1 */
+  --t-dim: #9397ab;     /* neutral-500 — 5.2:1 */
+  --t-dimmer: #9397ab;  /* neutral-500 — 5.2:1 */
+  --t-acc: #9184d9;
+  --t-acc-hi: #d2cefd;
+  --t-acc-soft: rgba(145,132,217,.12);
+  --t-second: #b5abfc;
+  --t-second-deep: #423a6a;
+  --t-ok: #b5abfc;
+  --t-warn: #b5abfc;
+  --t-warn-soft: rgba(145,132,217,.16);
+  --t-toast: #232532;
+  --t-blank: linear-gradient(180deg, #4a4470, #38325c);
+  --t-blank-bd: #9184d9;
+  --t-blank-text: #f5f4ff;
+  --t-tile: linear-gradient(180deg, #3f424d 0%, #2f323c 100%);
+  --t-tile-hi: #595d6c;
+  --t-tile-lo: #292b31;
+  --t-tile-text: #f3f5fe;
+  --t-tile-val: #9397ab;
+  --t-rad: 14px;
+  --t-rad-sm: 8px;
+  --t-fd: Inter, system-ui, sans-serif;
+  --t-fb: Inter, system-ui, sans-serif;
+  --t-fwd: 500;
+  --t-btn-bg: transparent;
+  --t-btn-fg: #9184d9;
+  --t-btn-bd: #9184d9;
+  --t-btn-sh: none;
+  --t-btn-rad: 8px;
+}
+
+/* ── Sandbar — derived from the Organic design system. ────────────────────── */
+/* Over-rounded: containers at radius-lg, buttons and inputs at 999px.
+   Terracotta accent with sage as a genuine second voice. Caprasimo display. */
+[data-theme="sandbar"] {
+  --t-bg: #f5ead8;
+  --t-bg-grad: none;
+  --t-tex: none;
+  --t-panel: #ebddc5;
+  --t-panel-2: #f9f4ed;
+  --t-inset: #dcd3c4;
+  --t-line: rgba(32,30,29,.16);
+  --t-line-2: #c67139;
+  --t-text: #201e1d;
+  --t-muted: #474238;   /* neutral-800 — 7.1:1 */
+  --t-dim: #645c50;     /* neutral-700 — 4.9:1 */
+  --t-dimmer: #645c50;  /* neutral-700 — 4.9:1 */
+  --t-acc: #c67139;
+  --t-acc-hi: #8c491a;
+  --t-acc-soft: #fff2eb;
+  --t-second: #7a8a5e;
+  --t-second-deep: #3d472b;
+  --t-ok: #3d472b;      /* accent-2-800 — 6.6:1 on --t-inset */
+  --t-warn: #8c491a;
+  --t-warn-soft: #ffe1d0;
+  --t-toast: #ebddc5;
+  --t-blank: linear-gradient(180deg, #f0fae1, #e1eecc);
+  --t-blank-bd: #7a8a5e;
+  --t-blank-text: #3d472b;
+  --t-tile: linear-gradient(180deg, #f9f4ed 0%, #f1e9da 100%);
+  --t-tile-hi: #ffffff;
+  --t-tile-lo: #dcd3c4;
+  --t-tile-text: #2e2b25;
+  --t-tile-val: #a19786;
+  --t-rad: 28px;
+  --t-rad-sm: 16px;
+  --t-fd: Caprasimo, system-ui, sans-serif;
+  --t-fb: Figtree, system-ui, sans-serif;
+  --t-fwd: 400;
+  --t-btn-bg: #c67139;
+  --t-btn-fg: #f5ead8;
+  --t-btn-bd: transparent;
+  --t-btn-sh: none;
+  --t-btn-rad: 999px;
+}

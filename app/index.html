@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="feltwork">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="Rack Five — a word game played like Yahtzee. Build five words, turn their lengths into ranks, fill one scorecard.">
+<title>Rack Five</title>
+
+<link rel="stylesheet" href="./assets/fonts/fonts.css">
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/base.css">
+<link rel="stylesheet" href="./styles/screens.css">
+<link rel="stylesheet" href="./styles/game.css">
+
+<!-- Vendored, self-hosted. No CDN at runtime, no build step. -->
+<script type="importmap">
+{
+  "imports": {
+    "preact": "./vendor/preact.module.js",
+    "preact/hooks": "./vendor/hooks.module.js",
+    "htm": "./vendor/htm.module.js"
+  }
+}
+</script>
+</head>
+<body>
+<div id="root"></div>
+<noscript>Rack Five needs JavaScript enabled.</noscript>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

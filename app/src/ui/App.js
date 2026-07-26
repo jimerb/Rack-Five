@@ -1,0 +1,132 @@
+import { useEffect } from 'preact/hooks';
+import { html, cx } from './html.js';
+import {
+  go,
+  goPlay,
+  cycleTheme,
+  requestAbandonRun,
+  tick,
+  hideHelp,
+  getState,
+  me
+} from '../state/store.js';
+import { HelpPopover } from './Help.js';
+import { Modals } from './Modals.js';
+import { Home } from './screens/Home.js';
+import { Setup } from './screens/Setup.js';
+import { Game } from './screens/Game.js';
+import { Results } from './screens/Results.js';
+import { Leaderboards } from './screens/Leaderboards.js';
+import { HowToPlay } from './screens/HowToPlay.js';
+import { Settings } from './screens/Settings.js';
+import { Lab } from './screens/Lab.js';
+
+const THEME_NAMES = { feltwork: 'Feltwork', midnight: 'Midnight', sandbar: 'Sandbar' };
+
+const NAV = [
+  { key: 'home', label: 'Home' },
+  { key: 'play', label: 'Play' },
+  { key: 'leaderboards', label: 'Leaderboards' },
+  { key: 'howto', label: 'How to Play' },
+  { key: 'settings', label: 'Settings' }
+];
+
+export function App({ state }) {
+  // One interval for the whole app. tick() decides whether this second counts.
+  useEffect(() => {
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Backgrounding a timed run is recorded rather than silently forgiven.
+  useEffect(() => {
+    const onVisibility = () => {
+      const s = getState();
+      if (document.hidden && s.run && s.turn && s.run.timing !== 'relaxed') {
+        s.run.interrupted = true;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  const inRun = !!(state.run && state.turn && !state.run.completedAt);
+  const screen = state.screen;
+
+  const screens = {
+    home: Home,
+    setup: Setup,
+    game: Game,
+    results: Results,
+    leaderboards: Leaderboards,
+    howto: HowToPlay,
+    settings: Settings,
+    lab: Lab
+  };
+  const Screen = screens[screen] || Home;
+
+  return html`
+    <div class="app" onClick=${() => hideHelp()}>
+      <nav class="nav">
+        <button
+          class="nav-brand"
+          type="button"
+          onClick=${() => go('home')}
+          aria-label="Rack Five — home"
+        >
+          ${'Rack Five'}
+        </button>
+        <div class="nav-items">
+          ${NAV.map(
+            (n) => html`
+              <button
+                key=${n.key}
+                type="button"
+                class=${cx(
+                  'nav-item',
+                  (n.key === 'play'
+                    ? screen === 'setup' || screen === 'game'
+                    : screen === n.key || (n.key === 'settings' && screen === 'lab')) && 'is-active'
+                )}
+                onClick=${() => (n.key === 'play' ? goPlay() : go(n.key))}
+                aria-current=${screen === n.key ? 'page' : undefined}
+              >
+                ${n.key === 'play' && inRun ? 'Resume game' : n.label}
+                ${n.key === 'play' && inRun && html`<span class="live-dot" />`}
+              </button>
+            `
+          )}
+        </div>
+        <div class="nav-right">
+          ${inRun &&
+          html`
+            <button class="nav-quit-btn" type="button" onClick=${requestAbandonRun}>
+              Abandon run
+            </button>
+          `}
+          <span class="nav-theme-name">${THEME_NAMES[state.settings.theme]}</span>
+          <button class="nav-theme-btn" type="button" onClick=${cycleTheme}>Switch theme</button>
+        </div>
+      </nav>
+
+      <${Screen} state=${state} />
+
+      <${Modals} state=${state} />
+      <${HelpPopover} tip=${state.helpTip} />
+      ${state.toast &&
+      html`
+        <div class="toast" role="status">
+          <span>${state.toast.message}</span>
+          ${state.toast.action &&
+          html`
+            <button class="toast-action" type="button" onClick=${state.toast.action.onClick}>
+              ${state.toast.action.label}
+            </button>
+          `}
+        </div>
+      `}
+    </div>
+  `;
+}
+
+export { me };
