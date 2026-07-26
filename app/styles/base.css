@@ -550,6 +550,74 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--t-acc-hi);
 }
 
+/* ── Hover tooltip ───────────────────────────────────────────────────────────
+   Fixed, and rendered at the app root, so it is never clipped by the scorecard's
+   scroll container. Pointer-events off so it can never sit between the cursor
+   and the thing it is describing. */
+
+.hover-tip {
+  position: fixed;
+  z-index: 85;
+  width: min(300px, calc(100vw - 24px));
+  padding: 11px 13px;
+  border-radius: var(--t-rad);
+  background: var(--t-toast);
+  border: 1px solid var(--t-line-2);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: r5pop 0.12s ease;
+}
+.hover-tip h5 {
+  margin: 0 0 5px;
+  font-family: var(--t-fd);
+  font-weight: var(--t-fwd);
+  font-size: 13px;
+  color: var(--t-acc-hi);
+}
+.hover-tip p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--t-muted);
+  text-wrap: pretty;
+}
+.hover-tip p.note {
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--t-dim);
+}
+.hover-tip dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hover-tip dl > div {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+}
+.hover-tip dt { color: var(--t-muted); }
+.hover-tip dd {
+  margin: 0 0 0 auto;
+  font-weight: 600;
+  color: var(--t-text);
+}
+/* The payout line is the answer — separate it from the working above it. */
+.hover-tip dl > div:last-child {
+  margin-top: 4px;
+  padding-top: 5px;
+  border-top: 1px solid var(--t-line);
+}
+.hover-tip dl > div:last-child dt { color: var(--t-text); font-weight: 600; }
+.hover-tip dl > div:last-child dd {
+  font-family: var(--t-fd);
+  font-weight: var(--t-fwd);
+  font-size: 15px;
+  color: var(--t-acc-hi);
+}
+
 /* ── Modal shell ─────────────────────────────────────────────────────────── */
 
 .modal-backdrop {

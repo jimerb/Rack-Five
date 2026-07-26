@@ -14,7 +14,7 @@ import {
   VARIANT_PRESETS
 } from '../src/engine/ruleset.js';
 import { lengthToRank } from '../src/engine/rank.js';
-import { evaluate, cardTotals } from '../src/engine/evaluator.js';
+import { evaluate, cardTotals, explainScore } from '../src/engine/evaluator.js';
 import { drawTurn, buildBag } from '../src/engine/bag.js';
 import { hashSeed, mulberry32, normaliseSeed } from '../src/engine/rng.js';
 
@@ -98,6 +98,26 @@ export async function run() {
       [5, 5, 5, 1, 2],
       { tileValues: tvals }
     ).threeKind, 18);
+
+  /* The hover explanations must agree with what the evaluator actually pays —
+     a tooltip that shows different working than the score is worse than none. */
+  const last = (x) => x.lines[x.lines.length - 1][1];
+  check('explain', 'upper working ends at the payout',
+    last(explainScore(R, 'threes', [3, 3, 3, 1, 2])), e([3, 3, 3, 1, 2]).threes);
+  check('explain', 'rank-sum working ends at the payout',
+    last(explainScore(R, 'threeKind', [5, 5, 5, 1, 2])), e([5, 5, 5, 1, 2]).threeKind);
+  check('explain', 'a flat category says so', explainScore(R, 'largeStraight', [2, 3, 4, 5, 6]).lines.length, 1);
+  check('explain', 'rack five shows the rank multiplier',
+    last(explainScore(R, 'rackFive', [4, 4, 4, 4, 4])), 40);
+  check('explain', 'a non-qualifying hand is called out',
+    explainScore(R, 'fullHouse', [1, 2, 3, 4, 5]).qualifies, false);
+  check('explain', 'tile-value working ends at the payout',
+    last(explainScore(TV, 'fourKind', [5, 5, 5, 5, 2], tvals)),
+    t5([5, 5, 5, 5, 2]).fourKind);
+  check('explain', 'tile-value working shows the multiplier',
+    explainScore(TV, 'chance', [1, 1, 1, 1, 1], tvals).lines[1][1], '× 0.75');
+  check('explain', 'the upper section is never explained by tile value',
+    explainScore(TV, 'ones', [1, 1, 1, 1, 1], tvals).lines[0][0], 'Words of rank 1');
 
   /* Totals and the upper bonus */
   const card = {

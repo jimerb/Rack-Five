@@ -100,6 +100,7 @@ export function initStore() {
     toast: null,
     helpCat: null,
     helpTip: null,
+    hoverTip: null,
     lbView: { difficulty: 'medium', timing: 'all' },
     leaderboard,
     lastEntryId: null,
@@ -246,14 +247,14 @@ export function go(screen) {
   if (screen === 'game' && state.screen !== 'game' && state.turn) {
     logAction('resumed', { secondsLeft: state.turn.secondsLeft });
   }
-  set({ screen, helpTip: null });
+  set({ screen, helpTip: null, hoverTip: null });
 }
 
 export function goPlay() {
   if (state.run && state.turn && !state.run.completedAt) {
-    set({ screen: 'game', helpTip: null });
+    set({ screen: 'game', helpTip: null, hoverTip: null });
   } else {
-    set({ screen: 'setup', setup: { ...state.setup, seed: state.setup.seed || newSeed() }, helpTip: null });
+    set({ screen: 'setup', setup: { ...state.setup, seed: state.setup.seed || newSeed() }, helpTip: null, hoverTip: null });
   }
 }
 
@@ -304,6 +305,20 @@ export function showHelp(key, anchor) {
 
 export function hideHelp() {
   if (state.helpTip) set({ helpTip: null });
+}
+
+/**
+ * Hover tooltips, kept in their own slot so they never fight the click-to-open
+ * help popover. Content is passed inline rather than by key, because most of
+ * these explain a live number — what this hand would score, and why.
+ */
+export function showTip(item, anchor) {
+  if (!item) return;
+  set({ hoverTip: { item, anchor } });
+}
+
+export function hideTip() {
+  if (state.hoverTip) set({ hoverTip: null });
 }
 
 export function cycleTheme() {

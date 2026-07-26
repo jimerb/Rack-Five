@@ -10,7 +10,7 @@ import {
   getState,
   me
 } from '../state/store.js';
-import { HelpPopover } from './Help.js';
+import { HelpPopover, HoverTip } from './Help.js';
 import { Modals } from './Modals.js';
 import { Home } from './screens/Home.js';
 import { Setup } from './screens/Setup.js';
@@ -113,6 +113,7 @@ export function App({ state }) {
 
       <${Modals} state=${state} />
       <${HelpPopover} tip=${state.helpTip} />
+      <${HoverTip} tip=${state.hoverTip} />
       ${state.toast &&
       html`
         <div class="toast" role="status">

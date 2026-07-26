@@ -10,7 +10,33 @@ import {
   me
 } from '../../state/store.js';
 import { CATEGORIES, category, categoryHelp } from '../../engine/categories.js';
-import { HelpDot } from '../Help.js';
+import { explainScore } from '../../engine/evaluator.js';
+import { HelpDot, tipProps } from '../Help.js';
+
+/**
+ * The upper bonus is a single lump the player either gets or does not, and the
+ * row only shows progress. The tooltip names the prize and what is left to pay
+ * for it — which matters most under Tile Value Scoring, where the bonus is
+ * seeded much higher to keep the upper half worth chasing.
+ */
+function bonusTip(run, t) {
+  const prize = run.ruleset.upperBonusPoints;
+  const earned = t.bonus > 0;
+  const short = Math.max(0, t.threshold - t.upper);
+  return {
+    title: 'Upper bonus',
+    body: earned
+      ? `Earned. The six upper categories reached ${t.threshold}, so the card adds a one-off ${prize}.`
+      : `Reach ${t.threshold} across the six upper categories and the card adds a one-off ${prize}.`,
+    lines: [
+      ['Upper section so far', t.upper],
+      ['Threshold', t.threshold],
+      ...(earned ? [] : [['Still needed', short]]),
+      [earned ? 'Bonus' : 'Bonus if you get there', `+${prize}`]
+    ],
+    note: earned ? null : 'Only the six upper categories count toward this.'
+  };
+}
 
 export function Scorecard({ state }) {
   const run = state.run;
@@ -25,7 +51,8 @@ export function Scorecard({ state }) {
   // Under Tile Value Scoring this number drives every lower-section payout, so
   // show it. Without it the "+n" previews look arbitrary.
   const tileScoring = !!run.ruleset.experimentalVariants.tileValueScoring;
-  const tileTotal = tileScoring ? currentTileValues().reduce((a, b) => a + b, 0) : 0;
+  const tileVals = currentTileValues();
+  const tileTotal = tileVals.reduce((a, b) => a + b, 0);
 
   const chips = open
     .map((c) => ({ c, v: preview[c.key] || 0 }))
@@ -37,10 +64,16 @@ export function Scorecard({ state }) {
     const value = scored ? player.card[c.key] : preview[c.key] || 0;
     const qualifies = !scored && value > 0;
     const isSelected = selected === c.key && !scored;
+    // Show the working behind the "+n". A scored row gets none: its number is
+    // history, and explaining it with the hand now on the table would be a lie.
+    const tip = scored
+      ? null
+      : { title: c.name, ...explainScore(run.ruleset, c.key, ranks, tileVals) };
     return html`
       <button
         key=${c.key}
         type="button"
+        ...${tipProps(tip)}
         disabled=${scored}
         class=${cx(
           'sc-row',
@@ -113,7 +146,7 @@ export function Scorecard({ state }) {
           <div>
             <div class="sc-section-title">Upper section</div>
             <div class="sc-rows">${CATEGORIES.filter((c) => c.section === 'upper').map(rowFor)}</div>
-            <div class="sc-bonus">
+            <div class="sc-bonus" ...${tipProps(bonusTip(run, t))}>
               <span style="font-weight:600">Upper bonus</span>
               <span class="tnum" style="font-size:11px;color:var(--t-dim)">
                 ${t.upper} of ${t.threshold} needed

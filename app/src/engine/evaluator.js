@@ -135,6 +135,93 @@ export function describeScore(key, ranks, points, options = {}) {
 }
 
 /**
+ * Show the working behind a category's score, for the hover tooltips. Returns
+ * { qualifies, lines: [[label, value]], note } — the arithmetic spelled out, so
+ * a payout is never a number the player has to take on trust.
+ */
+export function explainScore(ruleset, key, ranks, tileValues = []) {
+  const points = evaluate(ruleset, ranks, { tileValues })[key] || 0;
+  const upperIndex = UPPER_KEYS.indexOf(key);
+  const live = ranks.filter((r) => r > 0);
+  const empties = ranks.length - live.length;
+  const emptyNote = empties
+    ? empties === 1
+      ? '1 empty slot counts as rank 0.'
+      : `${empties} empty slots count as rank 0.`
+    : null;
+
+  if (upperIndex >= 0) {
+    const rank = upperIndex + 1;
+    const n = ranks.filter((r) => r === rank).length;
+    return {
+      qualifies: n > 0,
+      lines: [
+        [`Words of rank ${rank}`, n],
+        ['Points per word', rank],
+        ['Scores', points]
+      ],
+      note: n ? null : `No rank-${rank} words in this hand, so it would score 0.`
+    };
+  }
+
+  const tvs = !!(
+    ruleset.experimentalVariants &&
+    ruleset.experimentalVariants.tileValueScoring &&
+    ruleset.tileValueScoring
+  );
+  const tileTotal = tileValues.reduce((a, b) => a + b, 0);
+
+  if (points === 0) {
+    return {
+      qualifies: false,
+      lines: [['Scores', 0]],
+      note: 'This hand does not qualify. You can still take the category, for 0.'
+    };
+  }
+
+  if (tvs) {
+    const m = ruleset.tileValueScoring.multipliers[key];
+    return {
+      qualifies: true,
+      lines: [
+        ['Tile value of all 5 words', tileTotal],
+        ['Multiplier', `× ${m.toFixed(2)}`],
+        ['Scores', points]
+      ],
+      note: emptyNote
+    };
+  }
+
+  const sum = live.reduce((a, b) => a + b, 0);
+  if (key === 'threeKind' || key === 'fourKind' || key === 'chance') {
+    return {
+      qualifies: true,
+      lines: [
+        ['Ranks', live.join(' + ') || '0'],
+        ['Scores', points]
+      ],
+      note: emptyNote
+    };
+  }
+  if (key === 'rackFive') {
+    return {
+      qualifies: true,
+      lines: [
+        ['All five words at rank', live[0]],
+        ['Multiplier', `× ${ruleset.rackFiveMultiplier}`],
+        ['Scores', points]
+      ],
+      note: null
+    };
+  }
+  return {
+    qualifies: true,
+    lines: [['Fixed value when it qualifies', points]],
+    note: `The pattern pays a flat ${points} whatever the ranks add up to (they total ${sum} here).`
+  };
+}
+
+/**
  * Card totals. Upper bonus threshold is per-difficulty (rulebook §6: expect to
  * need three different thresholds once there is real data).
  */

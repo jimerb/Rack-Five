@@ -3,7 +3,7 @@
 // and the scorecard — explaining the rule without leaving the active game.
 
 import { html } from './html.js';
-import { showHelp, hideHelp } from '../state/store.js';
+import { showHelp, hideHelp, showTip, hideTip } from '../state/store.js';
 
 export const HELP = {
   budget: {
@@ -74,6 +74,62 @@ export function HelpDot({ topic, label }) {
     >
       ?
     </button>
+  `;
+}
+
+/**
+ * Props to spread onto anything that should explain itself on hover.
+ *
+ * `item` is { title, body?, lines?: [[label, value]], note? }. Pass null to opt
+ * out — callers often build the item conditionally. Focus and blur are wired
+ * alongside the mouse so the same explanation is reachable from the keyboard.
+ *
+ * The tooltip renders at the app root with fixed positioning, which is what
+ * makes it usable on the scorecard: those rows live inside a scroll container
+ * that would clip an absolutely-positioned bubble.
+ */
+export function tipProps(item) {
+  if (!item) return {};
+  const open = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    showTip(item, { x: r.left + r.width / 2, y: r.bottom + 8, top: r.top });
+  };
+  return {
+    onMouseEnter: open,
+    onFocus: open,
+    onMouseLeave: hideTip,
+    onBlur: hideTip
+  };
+}
+
+export function HoverTip({ tip }) {
+  if (!tip) return null;
+  const { item, anchor } = tip;
+  const width = 300;
+  const left = Math.max(12, Math.min(anchor.x - width / 2, window.innerWidth - width - 12));
+  // Flip above the anchor when there is no room below it, and clamp either way
+  // so the bubble can never land off-screen.
+  const below = anchor.y + 150 < window.innerHeight;
+  const style = below
+    ? `left:${left}px;top:${Math.max(12, anchor.y)}px`
+    : `left:${left}px;bottom:${Math.max(12, window.innerHeight - anchor.top + 8)}px`;
+  return html`
+    <div class="hover-tip" role="tooltip" style=${style}>
+      <h5>${item.title}</h5>
+      ${item.body && html`<p>${item.body}</p>`}
+      ${item.lines &&
+      html`<dl>
+        ${item.lines.map(
+          ([label, value], i) => html`
+            <div key=${i}>
+              <dt>${label}</dt>
+              <dd class="tnum">${value}</dd>
+            </div>
+          `
+        )}
+      </dl>`}
+      ${item.note && html`<p class="note">${item.note}</p>`}
+    </div>
   `;
 }
 

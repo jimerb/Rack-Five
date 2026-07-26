@@ -25,7 +25,7 @@ import { CATEGORIES } from '../../engine/categories.js';
 import { lengthToRank, rankTable } from '../../engine/rank.js';
 import { Scorecard } from '../game/Scorecard.js';
 import { startBuildDrag, startLooseDrag } from '../game/drag.js';
-import { HelpDot } from '../Help.js';
+import { HelpDot, tipProps } from '../Help.js';
 import { formatClock } from './Setup.js';
 
 export function Game({ state }) {
@@ -87,7 +87,9 @@ export function Game({ state }) {
   return html`
     <main class="game">
       <header class="hud">
-        <span class="hud-diff">${cap(run.difficulty)}</span>
+        <span class="hud-diff" ...${tipProps(difficultyTip(run, ruleset))}>
+          ${cap(run.difficulty)}
+        </span>
         <span class="hud-turn">
           Turn <strong>${run.turnNo}</strong> / ${ruleset.gameLength.full}
         </span>
@@ -164,6 +166,31 @@ export function Game({ state }) {
                 ${turn.powerSwapAvailable &&
                 html`<span class="rack-select-note">Power Letters — tap a tile to swap it free</span>`}
               </span>
+
+              <!-- Lives in the rack header rather than in its own strip below the
+                   rack: it is reference information, and a full-width band of it
+                   pushed the build bar and word slots down the page. -->
+              <span class="rank-inline">
+                <span class="label-cap" style="white-space:nowrap">Length becomes rank</span>
+                <${HelpDot} topic="rank" label="How length becomes rank" />
+                <span class="chips">
+                  ${rankTable(ruleset).map(
+                    (r) => html`
+                      <span
+                        key=${r.rank}
+                        class=${cx(
+                          'rank-chip',
+                          buildRank === r.rank && turn.build.length >= 3 && 'is-live'
+                        )}
+                      >
+                        <span class="l">${r.length}</span>
+                        <span class="r">${r.rank}</span>
+                      </span>
+                    `
+                  )}
+                </span>
+              </span>
+
               <span class="segmented" role="group" aria-label="Sort the rack">
                 ${[
                   ['draw', 'Draw'],
@@ -207,24 +234,6 @@ export function Game({ state }) {
               ${!sorted.length && html`<div class="rack-empty">Every loose tile is in play.</div>`}
             </div>
           </section>
-
-          <div class="rank-strip">
-            <span class="label-cap" style="white-space:nowrap">Length becomes rank</span>
-            <${HelpDot} topic="rank" label="How length becomes rank" />
-            <span class="chips">
-              ${rankTable(ruleset).map(
-                (r) => html`
-                  <span
-                    key=${r.rank}
-                    class=${cx('rank-chip', buildRank === r.rank && turn.build.length >= 3 && 'is-live')}
-                  >
-                    <span class="l">${r.length}</span>
-                    <span class="r">${r.rank}</span>
-                  </span>
-                `
-              )}
-            </span>
-          </div>
 
           <section class="build-bar" data-dropzone="build" aria-label="Build bar">
             <div class="build-tiles">
@@ -358,7 +367,12 @@ export function Game({ state }) {
                 `
               : turn.refreshesLeft > 0 && !turn.expired
                 ? html`
-                    <button class="btn-outline" type="button" onClick=${enterRefresh}>
+                    <button
+                      class="btn-outline"
+                      type="button"
+                      ...${tipProps(refreshTip(turn, cap10, filled.length))}
+                      onClick=${enterRefresh}
+                    >
                       Refresh loose tiles
                     </button>
                   `
@@ -367,14 +381,16 @@ export function Game({ state }) {
                       ${turn.expired ? 'Time is up — no more refreshes' : 'No refreshes left this turn'}
                     </button>
                   `}
-            <button
-              class="btn-ghost"
-              type="button"
-              disabled=${turn.expired || hintsLeft() <= 0}
-              onClick=${openHint}
-            >
-              Hint · costs ${hintCost()} · ${hintsLeft()} left
-            </button>
+            <span ...${tipProps(hintTip(player, ruleset))}>
+              <button
+                class="btn-ghost"
+                type="button"
+                disabled=${turn.expired || hintsLeft() <= 0}
+                onClick=${openHint}
+              >
+                Hint · costs ${hintCost()} · ${hintsLeft()} left
+              </button>
+            </span>
           </div>
 
           <${Scorecard} state=${state} />
@@ -391,6 +407,62 @@ export function Game({ state }) {
       </div>
     </main>
   `;
+}
+
+/* ── Hover explanations ──────────────────────────────────────────────────────
+   Each of these answers the question the control actually raises: what does
+   this cost me, what does it commit me to, and what changes if I use it. */
+
+function difficultyTip(run, ruleset) {
+  const d = ruleset.difficulty[run.difficulty];
+  return {
+    title: `${cap(run.difficulty)} · ${run.budget} letters`,
+    body: `${d.blurb}. Difficulty changes one thing only — how many letters you get each turn. It adds no penalties and locks no categories.`,
+    lines: [
+      ['Letters per turn', run.budget],
+      ['Refreshes', `${ruleset.refresh.count} × up to ${ruleset.refresh.maximumTiles}`],
+      ['Upper bonus at', d.upperBonusThreshold]
+    ],
+    note:
+      run.budget < 40
+        ? 'Every category is still reachable, but a rank-6 Rack Five needs 40 letters and cannot be built here.'
+        : null
+  };
+}
+
+function refreshTip(turn, cap, placedWords) {
+  return {
+    title: 'Refresh loose tiles',
+    body: `Swap up to ${cap} loose tiles for new ones. Your budget does not change, and letters already inside a word are never replaced.`,
+    lines: [
+      ['Refreshes left', turn.refreshesLeft],
+      ['Tiles you may swap', `up to ${cap}`],
+      ['Words this would lock', placedWords]
+    ],
+    note: placedWords
+      ? 'This is the commitment point: every word you have placed becomes permanent, its letters cannot be reclaimed, and blanks are fixed.'
+      : 'Nothing is placed yet, so there is nothing to lock in — refreshing now costs you only the refresh.'
+  };
+}
+
+function hintTip(player, ruleset) {
+  const cost = ruleset.wordBank.hintCost;
+  const left = ruleset.wordBank.maximumHints - player.hintsUsed;
+  return {
+    title: 'Hint',
+    body: 'Reveals one valid word of a length you choose, built from the tiles loose right now. It is one word that fits, not the best word, and it makes no promise the other four slots still work.',
+    lines: [
+      ['Cost', `${cost} off the Word Bank`],
+      ['Your Word Bank', player.wordBank],
+      ['Hints left', left]
+    ],
+    note:
+      left <= 0
+        ? 'No hints left this game.'
+        : player.wordBank < cost
+          ? 'Your bank is too low — bank a word first. It can never go negative.'
+          : 'Paid once, at purchase. Scoring never charges you again.'
+  };
 }
 
 function scrollTo(selector) {
