@@ -11,11 +11,12 @@ import {
   labIsModified,
   sanitizeLabValues,
   variantTag,
+  lockedVariants,
   VARIANT_PRESETS
 } from '../engine/ruleset.js';
 import { drawTurn } from '../engine/bag.js';
 import { lengthToRank } from '../engine/rank.js';
-import { evaluate, cardTotals, describeScore } from '../engine/evaluator.js';
+import { evaluate, cardTotals, describeScore, redTileApplies } from '../engine/evaluator.js';
 import { CATEGORIES, emptyCard, cardComplete, categoryName } from '../engine/categories.js';
 import { validatePlacement } from '../engine/validation.js';
 import { findHint } from '../engine/hints.js';
@@ -164,17 +165,41 @@ export function currentTileValues() {
   return t.slots.map((s) => (s ? s.tileValue : 0));
 }
 
+export function currentRedTileSlots() {
+  const t = state.turn;
+  if (!t) return [];
+  return t.slots.map((s) => !!(s && s.hasRedTile));
+}
+
 export function previewScores() {
   const t = state.turn;
   const run = state.run;
   if (!t || !run) return {};
-  return evaluate(run.ruleset, currentRanks(), { tileValues: currentTileValues() });
+  return evaluate(run.ruleset, currentRanks(), {
+    tileValues: currentTileValues(),
+    redTileSlots: currentRedTileSlots()
+  });
+}
+
+/** What the Dictionary Miss Penalty variant has cost this run so far. */
+export function missPenaltyFor(run) {
+  const rules = run.ruleset.dictionaryMissPenalty;
+  if (!run.ruleset.experimentalVariants.dictionaryMissPenalty || !rules) return 0;
+  const extra = Math.max(0, (me(run).dictionaryMisses || 0) - rules.maximumFreeMisses);
+  return extra * rules.pointsPerExtraMiss;
 }
 
 export function totals(run = state.run) {
   if (!run) return null;
   const p = me(run);
-  return cardTotals(run.ruleset, p.card, run.difficulty, p.wordBank, p.jumboPoints);
+  return cardTotals(
+    run.ruleset,
+    p.card,
+    run.difficulty,
+    p.wordBank,
+    p.jumboPoints,
+    missPenaltyFor(run)
+  );
 }
 
 export function placedLetterCount(turn = state.turn) {
@@ -349,36 +374,58 @@ export function setLabValue(key, value) {
   write(KEYS.lab, values);
 }
 
-export function setLabVariant(key, value) {
-  const current = state.lab.values;
-  const values = { ...current, variants: { ...current.variants, [key]: value } };
-
-  // Some variants only make sense at a different balance point. Carry those
-  // numbers in and out with the toggle, but never overwrite a slider the player
-  // has already moved by hand — and put them back on the way out, or toggling
-  // the variant on and off again would leave the run flagged Custom forever.
+/**
+ * Carry a variant's balance numbers and dependencies along with its switch.
+ *
+ * A number only moves when it is still sitting where the opposite state left it
+ * — a slider the player moved by hand is theirs. Because the rule is symmetric
+ * rather than anchored on the defaults, toggling a variant off and back on
+ * always lands exactly where it started, which is what keeps a round trip from
+ * flagging the run Custom forever. Mutates `values`; pass a copy.
+ */
+function applyVariantPreset(values, key, on) {
   const preset = VARIANT_PRESETS[key];
+  if (!preset) return [];
+  const r = standardRuleset();
+  const seeded = preset(r, on);
+  const opposite = preset(r, !on);
   const moved = [];
-  if (preset) {
-    const seeded = preset(standardRuleset());
-    const defaults = labDefaults();
-    for (const k of Object.keys(seeded)) {
-      if (value && current[k] === defaults[k] && seeded[k] !== defaults[k]) {
-        values[k] = seeded[k];
-        moved.push(k);
-      } else if (!value && current[k] === seeded[k] && seeded[k] !== defaults[k]) {
-        values[k] = defaults[k];
-        moved.push(k);
-      }
+
+  for (const k of Object.keys(seeded)) {
+    if (k === 'variants') continue;
+    if (values[k] === opposite[k] && seeded[k] !== opposite[k]) {
+      values[k] = seeded[k];
+      moved.push(k);
     }
   }
+  for (const k of Object.keys(seeded.variants || {})) {
+    const want = seeded.variants[k];
+    if (values.variants[k] === want) continue;
+    values.variants = { ...values.variants, [k]: want };
+    moved.push(...applyVariantPreset(values, k, want));
+  }
+  return moved;
+}
+
+export function setLabVariant(key, value) {
+  const current = state.lab.values;
+  // Dependencies hold their prerequisites on. The Lab disables those switches,
+  // so reaching here means something else called in — refuse rather than
+  // silently producing a variant that cannot work.
+  if (!value && lockedVariants(current.variants)[key]) return;
+
+  const values = { ...current, variants: { ...current.variants, [key]: value } };
+  const moved = applyVariantPreset(values, key, value);
 
   const lab = { enabled: labIsModified(values), values };
   set({ lab });
   write(KEYS.lab, values);
 
-  if (moved.includes('upperBonusPoints')) {
-    toast(`Upper bonus ${value ? 'raised' : 'restored'} to ${values.upperBonusPoints} to match.`);
+  if (values.variants.tileValueScoring && !current.variants.tileValueScoring && key !== 'tileValueScoring') {
+    toast('Tile Value Scoring switched on — Red Tile multiplies a tile-value payout.');
+  } else if (moved.includes('upperBonusPoints')) {
+    const raised = values.upperBonusPoints > current.upperBonusPoints;
+    toast(`Upper bonus ${raised ? 'raised' : 'restored'} to ${values.upperBonusPoints} to match.`);
   }
 }
 
@@ -440,9 +487,11 @@ export function startRun(options = {}) {
         jumboPoints: 0,
         jumboWord: '',
         hintsUsed: 0,
-        hintPointsSpent: 0
+        hintPointsSpent: 0,
+        dictionaryMisses: 0
       }
     ],
+    redTilesSeen: 0,
     turnNo: 1,
     history: [],
     log: [],
@@ -454,6 +503,7 @@ export function startRun(options = {}) {
 
   set({ run, turn: null, screen: 'game', modal: null, helpCat: null, lastResult: null });
   logAction('run_started', { seed, difficulty, timing, budget, isCustom: run.isCustom });
+  play('gameStart');
   beginTurn(1);
 }
 
@@ -461,7 +511,10 @@ export function beginTurn(turnNo, carried = []) {
   const run = state.run;
   const ruleset = run.ruleset;
   const need = run.budget - carried.length;
-  const { rack, queue } = drawTurn(ruleset, run.seed, turnNo, need);
+  const redTilesLeft = ruleset.redTile
+    ? ruleset.redTile.maximumPerGame - (run.redTilesSeen || 0)
+    : 0;
+  const { rack, queue } = drawTurn(ruleset, run.seed, turnNo, need, { redTilesLeft });
   const seconds = ruleset.timingSeconds[run.timing];
 
   const turn = {
@@ -489,15 +542,29 @@ export function beginTurn(turnNo, carried = []) {
   const wantsIntent =
     state.settings.instrumentation || ruleset.experimentalVariants.blindDeclaration;
 
+  const drewRed = rack.some((t) => t.red);
+
   set({
     turn,
+    run: drewRed ? { ...run, redTilesSeen: (run.redTilesSeen || 0) + 1 } : run,
     modal: wantsIntent
       ? { type: ruleset.experimentalVariants.blindDeclaration ? 'declare' : 'intent' }
       : null,
     helpCat: null
   });
   assertBudget(turn, run.budget, 'beginTurn');
-  logAction('turn_started', { turnNo, rack: rack.map((t) => (t.blank ? '_' : t.letter)).join('') });
+  logAction('turn_started', {
+    turnNo,
+    rack: rack.map((t) => (t.blank ? '_' : t.letter)).join(''),
+    redTile: drewRed ? rack.find((t) => t.red).letter : null
+  });
+  if (drewRed) {
+    const mult = ruleset.redTile.multiplier;
+    toast(
+      `Red tile in your rack — a word using it pays ${mult}× whatever lower-section category it qualifies.`,
+      4500
+    );
+  }
   autosave();
 }
 
@@ -630,6 +697,36 @@ export function clearBuild() {
   updateTurn({ build: [], loose: t.loose.concat(back), error: null }, 'clearBuild');
 }
 
+/**
+ * Count a word that simply is not in the dictionary, and return the sentence
+ * that goes on the end of the rejection message.
+ *
+ * The count belongs in that message rather than a toast: it is the same place
+ * the player is already looking, it survives as long as the error does, and it
+ * lets them see the threshold coming instead of discovering the bill on the
+ * Results screen. Returns null when the variant is off, so the message is
+ * unchanged for everyone else.
+ */
+function chargeDictionaryMiss() {
+  const run = state.run;
+  const rules = run.ruleset.dictionaryMissPenalty;
+  if (!run.ruleset.experimentalVariants.dictionaryMissPenalty || !rules) return null;
+
+  const player = me(run);
+  const misses = (player.dictionaryMisses || 0) + 1;
+  const players = run.players.slice();
+  players[0] = { ...player, dictionaryMisses: misses };
+  set({ run: { ...run, players } });
+
+  const free = rules.maximumFreeMisses;
+  if (misses <= free) {
+    return ` Incorrect attempt ${misses} of ${free}.`;
+  }
+  const over = misses - free;
+  const cost = over * rules.pointsPerExtraMiss;
+  return ` Incorrect attempt ${misses} — ${over} past the ${free} free, costing ${cost} points.`;
+}
+
 export function placeWord() {
   const t = state.turn;
   const run = state.run;
@@ -644,17 +741,21 @@ export function placeWord() {
   });
   if (!check.ok) {
     play('invalid');
-    updateTurn({ error: check.reason }, 'placeWord:invalid');
-    logAction('word_rejected', { reason: check.reason });
+    // Charge first — the count it returns goes on the end of the message the
+    // player is about to read.
+    const missNote = check.code === 'notAWord' ? chargeDictionaryMiss() : null;
+    updateTurn({ error: check.reason + (missNote || '') }, 'placeWord:invalid');
+    logAction('word_rejected', { reason: check.reason, code: check.code });
     return;
   }
 
   const index = t.slots.findIndex((s) => !s);
   const slot = {
     word: check.word,
-    letters: t.build.map((x) => ({ c: x.letter, blank: x.blank })),
+    letters: t.build.map((x) => ({ c: x.letter, blank: x.blank, red: !!x.red })),
     rank: lengthToRank(run.ruleset, check.word.length),
     tileValue: t.build.reduce((a, x) => a + (x.blank ? 0 : x.value), 0),
+    hasRedTile: t.build.some((x) => x.red),
     provisional: true,
     tiles: t.build.slice()
   };
@@ -895,7 +996,11 @@ export function scoreCategory(key) {
   const slots = t.slots.map((s) => (s ? { ...s, provisional: false } : s));
   const filled = slots.filter(Boolean);
   const ranks = slots.map((s) => (s ? s.rank : 0));
-  const preview = evaluate(ruleset, ranks, { tileValues: slots.map((s) => (s ? s.tileValue : 0)) });
+  const redTileSlots = slots.map((s) => !!(s && s.hasRedTile));
+  const preview = evaluate(ruleset, ranks, {
+    tileValues: slots.map((s) => (s ? s.tileValue : 0)),
+    redTileSlots
+  });
 
   let points = preview[key] || 0;
   let halved = false;
@@ -931,6 +1036,7 @@ export function scoreCategory(key) {
     words: filled.map((s) => s.word),
     lengths: filled.map((s) => s.word.length),
     tileValues: filled.map((s) => s.tileValue),
+    redTileSlots,
     ranks,
     category: key,
     categoryPoints: points,
@@ -949,7 +1055,10 @@ export function scoreCategory(key) {
     feeling: null,
     resultLine: describeScore(key, ranks, points, {
       tileValueScoring: !!ruleset.experimentalVariants.tileValueScoring,
-      tileValue: filled.reduce((a, s) => a + s.tileValue, 0)
+      tileValue: filled.reduce((a, s) => a + s.tileValue, 0),
+      redTileMultiplier: redTileApplies(ruleset, key, ranks, redTileSlots)
+        ? ruleset.redTile.multiplier
+        : 0
     })
   };
 

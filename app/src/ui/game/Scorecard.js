@@ -6,6 +6,7 @@ import {
   previewScores,
   currentRanks,
   currentTileValues,
+  currentRedTileSlots,
   totals,
   me
 } from '../../state/store.js';
@@ -29,7 +30,13 @@ import { HelpDot, tipProps } from '../Help.js';
 function scoredTip(run, c) {
   const record = run.history.find((h) => h.category === c.key);
   if (!record) return null;
-  const explained = explainScore(run.ruleset, c.key, record.ranks, record.tileValues);
+  const explained = explainScore(
+    run.ruleset,
+    c.key,
+    record.ranks,
+    record.tileValues,
+    record.redTileSlots || []
+  );
   const lines = explained.lines.slice();
   const last = lines.length - 1;
   const recomputed = lines[last][1];
@@ -50,7 +57,9 @@ function scoredTip(run, c) {
  * the HUD, and folding them in here would make this number disagree with the
  * one the player is actually watching tick up during the turn.
  */
-function totalTip(t) {
+function totalTip(run, t) {
+  const misses = me(run).dictionaryMisses || 0;
+  const free = t.missPenalty ? run.ruleset.dictionaryMissPenalty.maximumFreeMisses : 0;
   return {
     title: 'Total',
     body: 'The sum of every category scored so far, plus the upper bonus if earned. Open categories are not guesses — they are left out until you actually score them.',
@@ -58,7 +67,14 @@ function totalTip(t) {
       ['Upper (scored so far)', t.upper],
       ['Upper bonus', t.bonus],
       ['Lower (scored so far)', t.lower],
-      ['Total', t.scorecard]
+      ['Card so far', t.scorecard],
+      // The penalty has no other live figure anywhere — Word Bank and Jumbo at
+      // least have their own HUD chips, so leaving this one to the Results
+      // screen would mean the player never sees it land.
+      ...(t.missPenalty
+        ? [[`Dictionary misses · ${misses}, ${free} free`, `−${t.missPenalty}`]]
+        : []),
+      ['Total', t.scorecard - t.missPenalty]
     ],
     note: 'Word Bank and Jumbo are shown separately in the header — they are not scorecard categories.'
   };
@@ -98,6 +114,7 @@ export function Scorecard({ state }) {
   const tileScoring = !!run.ruleset.experimentalVariants.tileValueScoring;
   const tileVals = currentTileValues();
   const tileTotal = tileVals.reduce((a, b) => a + b, 0);
+  const redSlots = currentRedTileSlots();
 
   const chips = open
     .map((c) => ({ c, v: preview[c.key] || 0 }))
@@ -122,7 +139,7 @@ export function Scorecard({ state }) {
         : scored
           ? scoredTip(run, c)
           : value > 0
-            ? { title: c.name, ...explainScore(run.ruleset, c.key, ranks, tileVals) }
+            ? { title: c.name, ...explainScore(run.ruleset, c.key, ranks, tileVals, redSlots) }
             : null;
     return html`
       <button
@@ -212,9 +229,13 @@ export function Scorecard({ state }) {
           <div>
             <div class="sc-section-title">Lower section</div>
             <div class="sc-rows">${CATEGORIES.filter((c) => c.section === 'lower').map(rowFor)}</div>
-            <div class="sc-total" ...${tipProps(totalTip(t))}>
+            <div class="sc-total" ...${tipProps(totalTip(run, t))}>
               <span>Total</span>
-              <span class="amt tnum">${t.scorecard}</span>
+              ${t.missPenalty > 0 &&
+              html`<span class="tnum" style="font-size:11px;color:var(--t-warn)">
+                −${t.missPenalty} misses
+              </span>`}
+              <span class="amt tnum">${t.scorecard - t.missPenalty}</span>
             </div>
           </div>
         </div>

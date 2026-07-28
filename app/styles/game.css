@@ -300,6 +300,31 @@
   color: var(--t-tile-val);
   pointer-events: none;
 }
+/* ── Red tile ────────────────────────────────────────────────────────────── */
+/* The star is not decoration. Colour alone cannot carry "this tile scores
+   differently", so the marker has to survive a greyscale render. */
+
+.tile.is-red,
+.build-tile.is-red {
+  background: var(--t-red);
+  box-shadow: inset 0 1px 0 var(--t-red-bd), 0 0 0 2px var(--t-red-bd), 0 5px 10px rgba(0, 0, 0, 0.5);
+}
+.tile.is-red .tl,
+.build-tile.is-red .tl { color: var(--t-red-text); }
+.tile.is-red .tv,
+.build-tile.is-red .tv { color: var(--t-red-val); }
+.tile.is-red::before,
+.build-tile.is-red::before {
+  content: '★';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--t-red-val);
+  pointer-events: none;
+}
+
 .build-hint { font-size: 14px; color: var(--t-dim); }
 .build-readout { flex: 1; min-width: 150px; }
 .build-word {
@@ -389,6 +414,25 @@
   color: var(--t-tile-text);
 }
 .slot-letters span.blank { background: var(--t-blank); color: var(--t-blank-text); }
+/* The placed word has to keep saying which letter was the red one — the tile is
+   gone from the rack by now, and the multiplier it carries is the reason the
+   category pays what it does. Too small for the rack tile's corner star, so the
+   marker is a ring the star sits on top of. */
+.slot-letters span.is-red {
+  position: relative;
+  background: var(--t-red);
+  color: var(--t-red-text);
+  box-shadow: 0 0 0 1.5px var(--t-red-bd), 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+.slot-letters span.is-red::after {
+  content: '★';
+  position: absolute;
+  top: -1px;
+  right: 1px;
+  font-size: 7px;
+  line-height: 1;
+  color: var(--t-red-val);
+}
 .slot-figures { display: flex; align-items: baseline; gap: 6px; }
 .slot-rank {
   font-family: var(--t-fd);

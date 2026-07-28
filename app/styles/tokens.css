@@ -41,6 +41,10 @@ html, body { margin: 0; padding: 0; height: 100%; }
   --t-tile-lo: #cbbf9f;
   --t-tile-text: #1d2b25;
   --t-tile-val: #7c8a7f;
+  --t-red: linear-gradient(180deg, #c9412f 0%, #9c2c1e 100%);
+  --t-red-bd: #f0a294;
+  --t-red-text: #fff3ef;
+  --t-red-val: #f0a294;
   --t-rad: 10px;
   --t-rad-sm: 6px;
   --t-fd: 'Space Grotesk', system-ui, sans-serif;
@@ -87,6 +91,10 @@ html, body { margin: 0; padding: 0; height: 100%; }
   --t-tile-lo: #292b31;
   --t-tile-text: #f3f5fe;
   --t-tile-val: #9397ab;
+  --t-red: linear-gradient(180deg, #a8384a 0%, #7a2637 100%);
+  --t-red-bd: #e79aa8;
+  --t-red-text: #fff0f3;
+  --t-red-val: #e79aa8;
   --t-rad: 14px;
   --t-rad-sm: 8px;
   --t-fd: Inter, system-ui, sans-serif;
@@ -132,6 +140,10 @@ html, body { margin: 0; padding: 0; height: 100%; }
   --t-tile-lo: #dcd3c4;
   --t-tile-text: #2e2b25;
   --t-tile-val: #a19786;
+  --t-red: linear-gradient(180deg, #d0492c 0%, #a8331a 100%);
+  --t-red-bd: #7a2412;
+  --t-red-text: #fff4f0;
+  --t-red-val: #f4bdad;
   --t-rad: 28px;
   --t-rad-sm: 16px;
   --t-fd: Caprasimo, system-ui, sans-serif;

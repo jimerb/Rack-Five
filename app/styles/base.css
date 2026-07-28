@@ -414,6 +414,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .switch.is-on .knob { left: 23px; background: var(--t-btn-fg, #1d2b25); }
 [data-theme='midnight'] .switch.is-on .knob { background: #161826; }
+.switch:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .row-toggle {
   display: flex;

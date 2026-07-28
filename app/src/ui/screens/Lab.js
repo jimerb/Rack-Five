@@ -1,6 +1,6 @@
 import { html, cx } from '../html.js';
 import { go, setLabValue, setLabVariant, resetLab } from '../../state/store.js';
-import { standardRuleset } from '../../engine/ruleset.js';
+import { standardRuleset, lockedVariants } from '../../engine/ruleset.js';
 
 const GROUPS = [
   {
@@ -48,6 +48,38 @@ const GROUPS = [
       ['tvChance', 'Chance'],
       ['tvRackFive', 'Rack Five']
     ])
+  },
+  {
+    title: 'Red Tile',
+    variantGate: 'redTile',
+    rows: [
+      {
+        key: 'redTileRarity',
+        label: 'Chance of a red tile per turn',
+        unit: '',
+        min: 0,
+        max: 1,
+        step: 0.05,
+        format: (v) => `${Math.round(v * 100)}%`
+      },
+      {
+        key: 'redTileMultiplier',
+        label: 'Multiplier when its word qualifies',
+        unit: '× the category',
+        min: 1,
+        max: 4,
+        step: 0.25,
+        format: (v) => v.toFixed(2)
+      }
+    ]
+  },
+  {
+    title: 'Dictionary Miss Penalty',
+    variantGate: 'dictionaryMissPenalty',
+    rows: [
+      { key: 'missPenaltyFreeMisses', label: 'Free misses per game', unit: 'misses', min: 1, max: 10, step: 1 },
+      { key: 'missPenaltyPoints', label: 'Cost of each extra miss', unit: 'pts', min: 1, max: 20, step: 1 }
+    ]
   }
 ];
 
@@ -78,7 +110,19 @@ const VARIANTS = [
   {
     key: 'tileValueScoring',
     name: 'Tile Value Scoring',
-    desc: 'The whole lower section pays a multiple of the summed tile value of all five words instead of the rank sum. Qualification is unchanged — Three of a Kind still needs three words of one rank. The upper section stays rank-based and its bonus rises to 100 to compensate.',
+    desc: 'On by default — this is the standard scoring mode. The whole lower section pays a multiple of the summed tile value of all five words instead of the rank sum. Qualification is unchanged: Three of a Kind still needs three words of one rank. The upper section stays rank-based and its bonus sits at 100 to compensate; switching this off drops it back to 35.',
+    wired: true
+  },
+  {
+    key: 'redTile',
+    name: 'Red Tile',
+    desc: 'On by default. One rack tile per turn can come up red, weighted towards the harder letters. Any lower-section category a red-tile word helps qualify pays double. Needs Tile Value Scoring, which it switches on and holds there.',
+    wired: true
+  },
+  {
+    key: 'dictionaryMissPenalty',
+    name: 'Dictionary Miss Penalty',
+    desc: 'Five rejected words per game are free; every attempt after that costs points off the final score. Only words that are genuinely not in the dictionary count — an unassigned blank or a duplicate is never charged.',
     wired: true
   },
   {
@@ -101,9 +145,12 @@ const VARIANTS = [
   }
 ];
 
+const variantName = (key) => (VARIANTS.find((v) => v.key === key) || {}).name || key;
+
 export function Lab({ state }) {
   const values = state.lab.values;
   const standard = standardRuleset();
+  const locked = lockedVariants(values.variants);
 
   return html`
     <main class="screen">
@@ -144,7 +191,7 @@ export function Lab({ state }) {
                 ${group.variantGate &&
                 !values.variants[group.variantGate] &&
                 html`<p class="body-13" style="margin:-6px 0 12px">
-                  Turn on the Tile Value Scoring variant below to use these.
+                  Turn on the ${variantName(group.variantGate)} variant below to use these.
                 </p>`}
                 <div class="lab-rows">
                   ${group.rows.map((row) => {
@@ -219,7 +266,10 @@ export function Lab({ state }) {
         <section>
           <div class="row" style="align-items:baseline;gap:10px;margin-bottom:10px">
             <h2 class="section-title">Experimental variants</h2>
-            <span class="body-13">All off by default. None of these ship as standard Phase 1 rules.</span>
+            <span class="body-13">
+              Tile Value Scoring and Red Tile are on by default; the rest are off. Only the two
+              defaults ship as standard Phase 1 rules.
+            </span>
           </div>
           <div class="col" style="gap:7px">
             ${VARIANTS.map(
@@ -227,13 +277,20 @@ export function Lab({ state }) {
                 <div key=${v.key} class="row-toggle">
                   <span class="rt-text">
                     <span class="rt-name">${v.name}</span>
-                    <span class="rt-desc">${v.desc}</span>
+                    <span class="rt-desc">
+                      ${v.desc}
+                      ${locked[v.key] &&
+                      html`<em style="display:block;margin-top:4px">
+                        Held on by ${variantName(locked[v.key])}.
+                      </em>`}
+                    </span>
                   </span>
                   <button
                     type="button"
                     role="switch"
                     aria-checked=${!!values.variants[v.key]}
                     aria-label=${v.name}
+                    disabled=${!!locked[v.key]}
                     class=${cx('switch', values.variants[v.key] && 'is-on')}
                     onClick=${() => setLabVariant(v.key, !values.variants[v.key])}
                   >

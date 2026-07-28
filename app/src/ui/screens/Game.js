@@ -220,7 +220,7 @@ export function Game({ state }) {
                     key=${tile.id}
                     type="button"
                     data-li=${tile.id}
-                    class=${cx('tile', marked && 'is-marked', tile.blank && 'is-blank')}
+                    class=${cx('tile', marked && 'is-marked', tile.blank && 'is-blank', tile.red && 'is-red')}
                     disabled=${turn.expired}
                     onPointerDown=${(e) => !turn.expired && startLooseDrag(e, tile.id)}
                     onClick=${() => tapLoose(tile.id)}
@@ -243,10 +243,10 @@ export function Game({ state }) {
                     key=${tile.id}
                     type="button"
                     data-bi=${i}
-                    class=${cx('build-tile', tile.blank && 'is-blank')}
+                    class=${cx('build-tile', tile.blank && 'is-blank', tile.red && 'is-red')}
                     onPointerDown=${(e) => startBuildDrag(e, i, tile.id)}
                     onClick=${() => tapBuild(tile.id)}
-                    aria-label=${`${tile.blank ? 'Blank as ' : ''}${tile.letter || 'unassigned blank'}, position ${i + 1}. Activate to return it to the rack.`}
+                    aria-label=${`${tile.red ? 'Red tile, ' : ''}${tile.blank ? 'Blank as ' : ''}${tile.letter || 'unassigned blank'}, position ${i + 1}. Activate to return it to the rack.`}
                   >
                     <span class="tl">${tile.letter || '?'}</span>
                     <span class="tv">${tile.blank ? 0 : tile.value}</span>
@@ -319,7 +319,8 @@ export function Game({ state }) {
                     ? html`
                         <span class="slot-letters">
                           ${slot.letters.map(
-                            (L, j) => html`<span key=${j} class=${cx(L.blank && 'blank')}>${L.c}</span>`
+                            (L, j) =>
+                              html`<span key=${j} class=${cx(L.blank && 'blank', L.red && 'is-red')}>${L.c}</span>`
                           )}
                         </span>
                         <span class="slot-figures">
@@ -509,15 +510,18 @@ function sortTiles(tiles, mode) {
 }
 
 function tileLabel(tile, marked, refreshing) {
-  const name = tile.blank ? 'Blank tile, worth 0' : `${tile.letter}, worth ${tile.value}`;
+  const base = tile.blank ? 'Blank tile, worth 0' : `${tile.letter}, worth ${tile.value}`;
+  const name = tile.red ? `Red tile, ${base}` : base;
   if (refreshing) return `${name}. ${marked ? 'Selected to discard' : 'Tap to select for discard'}`;
   return `${name}. Tap to add it to the build bar.`;
 }
 
 function slotLabel(slot, i) {
   if (!slot) return `Slot ${i + 1} is empty and would score rank 0.`;
+  const red = slot.letters.find((L) => L.red);
   return (
     `Slot ${i + 1}: ${slot.word}, ${slot.word.length} letters, rank ${slot.rank}, tile value ${slot.tileValue}. ` +
+    (red ? `The ${red.c} is a red tile. ` : '') +
     (slot.provisional ? 'Provisional — activate to dismantle it.' : 'Permanent.')
   );
 }

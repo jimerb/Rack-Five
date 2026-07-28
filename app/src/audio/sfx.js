@@ -107,6 +107,15 @@ const SOUNDS = {
     [523.25, 659.25, 783.99, 1046.5].forEach((f, i) =>
       tone({ freq: f, type: 'sine', duration: 0.6, gain: 0.28, delay: i * 0.11 })
     );
+  },
+  // Deliberately not a fanfare. `finish` is the four-note rise that means the
+  // game is over, so the opening is a short two-note lift with a triangle body
+  // and a soft brush — recognisable as a beginning, impossible to mistake for
+  // the ending.
+  gameStart: () => {
+    noise({ duration: 0.2, gain: 0.12, highpass: 500 });
+    tone({ freq: 349.23, type: 'triangle', duration: 0.28, gain: 0.26, sweep: 40 });
+    tone({ freq: 523.25, type: 'sine', duration: 0.42, gain: 0.24, delay: 0.13 });
   }
 };
 
@@ -123,7 +132,8 @@ const HAPTICS = {
   hint: 12,
   warn: [16, 60, 16],
   timeout: [40, 60, 40],
-  finish: [30, 50, 30, 50, 70]
+  finish: [30, 50, 30, 50, 70],
+  gameStart: [18, 40, 28]
 };
 
 export function play(name) {

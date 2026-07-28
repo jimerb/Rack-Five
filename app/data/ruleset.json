@@ -64,7 +64,11 @@
     "blitz": 90,
     "warningThreshold": 30
   },
-  "upperBonusPoints": 35,
+  "upperBonusPoints": 100,
+  "rankScoring": {
+    "note": "The upper-bonus value that belongs with rank-based lower-section scoring. Tile Value Scoring is on by default and roughly doubles what the lower section pays, so upperBonusPoints above sits at the Tile Value figure; turning the variant off in the Lab restores this one.",
+    "upperBonusPoints": 35
+  },
   "lowerSection": {
     "threeOfAKind": "sumOfRanks",
     "fourOfAKind": "sumOfRanks",
@@ -186,10 +190,24 @@
     "rankZero": "never satisfies any pattern requirement"
   },
   "experimentalVariants": {
-    "tileValueScoring": false,
+    "tileValueScoring": true,
+    "redTile": true,
+    "dictionaryMissPenalty": false,
     "blindDeclaration": false,
     "carryOver": false,
     "powerLetters": false
+  },
+  "redTile": {
+    "note": "One rack tile per turn can be drawn red, weighted towards the harder letters. A word containing it multiplies whatever lower-section category that word helps qualify. Requires tileValueScoring, which supplies the tile values the multiplier acts on.",
+    "rarity": 0.35,
+    "maximumPerGame": 2,
+    "multiplier": 2,
+    "weightExponent": 2
+  },
+  "dictionaryMissPenalty": {
+    "note": "Rejected words that are simply not in the dictionary are free up to maximumFreeMisses per game; every one after that costs pointsPerExtraMiss off the final score. Rejections for other reasons (unassigned blank, duplicate word, no free slot) never count.",
+    "maximumFreeMisses": 5,
+    "pointsPerExtraMiss": 5
   },
   "structuralSafeguards": {
     "note": "These change what the scorecard means and must not be exposed in the Gameplay Lab.",

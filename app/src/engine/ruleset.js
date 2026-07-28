@@ -52,6 +52,10 @@ export function effectiveRuleset(lab) {
     chance: L.tvChance,
     rackFive: L.tvRackFive
   };
+  r.redTile.rarity = L.redTileRarity;
+  r.redTile.multiplier = L.redTileMultiplier;
+  r.dictionaryMissPenalty.maximumFreeMisses = L.missPenaltyFreeMisses;
+  r.dictionaryMissPenalty.pointsPerExtraMiss = L.missPenaltyPoints;
   r.jumbo.minimumLength = L.jumboMinimumLength;
   r.jumbo.pointsPerLetter = L.jumboPointsPerLetter;
   r.wordBank.hintCost = L.hintCost;
@@ -89,6 +93,10 @@ export function labDefaults() {
     tvLargeStraight: r.tileValueScoring.multipliers.largeStraight,
     tvChance: r.tileValueScoring.multipliers.chance,
     tvRackFive: r.tileValueScoring.multipliers.rackFive,
+    redTileRarity: r.redTile.rarity,
+    redTileMultiplier: r.redTile.multiplier,
+    missPenaltyFreeMisses: r.dictionaryMissPenalty.maximumFreeMisses,
+    missPenaltyPoints: r.dictionaryMissPenalty.pointsPerExtraMiss,
     jumboMinimumLength: r.jumbo.minimumLength,
     jumboPointsPerLetter: r.jumbo.pointsPerLetter,
     hintCost: r.wordBank.hintCost,
@@ -100,33 +108,70 @@ export function labDefaults() {
   };
 }
 
-/**
- * Some variants only make sense at a different balance point. Turning one on
- * seeds those numbers so they stay tunable afterwards; turning it off puts them
- * back. Each entry maps a variant key to the Lab values it carries with it.
- *
- * Tile Value Scoring roughly doubles what the lower section pays, so a 35-point
- * upper bonus would stop being worth chasing. The seven multipliers need no
- * entry here — labDefaults() already holds their intended variant values.
- */
 /** Short names for the experimental variants, for badges and leaderboard rows. */
 export const VARIANT_LABELS = {
   tileValueScoring: 'Tile Value',
+  redTile: 'Red Tile',
+  dictionaryMissPenalty: 'Miss Penalty',
   blindDeclaration: 'Blind',
   carryOver: 'Carry-Over',
   powerLetters: 'Power Letters'
 };
 
-/** A one-line summary of which variants a run used, or null when it used none. */
+/**
+ * A one-line summary of how a run's variants departed from standard, or null
+ * when they did not. Tile Value Scoring and Red Tile are on by default, so a tag
+ * lists deviations rather than everything switched on — otherwise every
+ * ordinary run would carry a badge and the badge would mean nothing.
+ */
 export function variantTag(variants) {
   if (!variants) return null;
-  const on = Object.keys(VARIANT_LABELS).filter((k) => variants[k]);
-  return on.length ? on.map((k) => VARIANT_LABELS[k]).join(' · ') : null;
+  const base = standardRuleset().experimentalVariants;
+  const parts = Object.keys(VARIANT_LABELS)
+    .filter((k) => !!variants[k] !== !!base[k])
+    .map((k) => (variants[k] ? VARIANT_LABELS[k] : `No ${VARIANT_LABELS[k]}`));
+  return parts.length ? parts.join(' · ') : null;
 }
 
+/**
+ * Some variants only make sense at a different balance point, and some depend on
+ * another variant entirely. Toggling one carries those numbers and flags in, and
+ * puts them back on the way out. Each entry maps a variant key to the Lab values
+ * it drags along; a `variants` key inside the returned object sets other switches.
+ *
+ * Tile Value Scoring is the default scoring mode and its lower section pays
+ * roughly double, which is why the standard upper bonus is 100. Turning it off
+ * has to drop the bonus back to the rank-scoring figure or the upper half
+ * becomes the only thing worth chasing.
+ *
+ * Red Tile multiplies a lower-section payout that is computed from tile values,
+ * so it is inert without Tile Value Scoring and seeds it on.
+ */
 export const VARIANT_PRESETS = {
-  tileValueScoring: (r) => ({ upperBonusPoints: r.tileValueScoring.upperBonusPoints })
+  tileValueScoring: (r, on) => ({
+    upperBonusPoints: on ? r.tileValueScoring.upperBonusPoints : r.rankScoring.upperBonusPoints
+  }),
+  redTile: (r, on) => (on ? { variants: { tileValueScoring: true } } : {})
 };
+
+/** Variants that cannot be switched off while the variant keying this map is on. */
+export const VARIANT_REQUIRES = {
+  redTile: ['tileValueScoring']
+};
+
+/**
+ * The variants currently held on by something else, mapped to the variant
+ * holding them. The Lab reads this to disable a switch and say why.
+ */
+export function lockedVariants(variants) {
+  const locked = {};
+  if (!variants) return locked;
+  for (const owner of Object.keys(VARIANT_REQUIRES)) {
+    if (!variants[owner]) continue;
+    for (const needed of VARIANT_REQUIRES[owner]) locked[needed] = owner;
+  }
+  return locked;
+}
 
 /**
  * Reconcile a persisted Lab blob with the current shape.

@@ -11,11 +11,13 @@ import {
   labDefaults,
   labIsModified,
   sanitizeLabValues,
+  variantTag,
+  lockedVariants,
   VARIANT_PRESETS
 } from '../src/engine/ruleset.js';
 import { lengthToRank } from '../src/engine/rank.js';
-import { evaluate, cardTotals, explainScore } from '../src/engine/evaluator.js';
-import { drawTurn, buildBag } from '../src/engine/bag.js';
+import { evaluate, cardTotals, explainScore, redTileApplies } from '../src/engine/evaluator.js';
+import { drawTurn, buildBag, tileValue } from '../src/engine/bag.js';
 import { hashSeed, mulberry32, normaliseSeed } from '../src/engine/rng.js';
 
 const results = [];
@@ -25,10 +27,28 @@ function check(group, name, actual, expected) {
   results.push({ group, name, ok: eq(actual, expected), actual, expected });
 }
 
+/** A Lab ruleset: defaults with `over` applied, variants merged not replaced. */
+function labWith(over = {}) {
+  const D = labDefaults();
+  return effectiveRuleset({
+    enabled: true,
+    values: { ...D, ...over, variants: { ...D.variants, ...(over.variants || {}) } }
+  });
+}
+
 export async function run() {
   await loadStandardRuleset('../data/ruleset.json');
   const R = standardRuleset();
-  const e = (ranks) => evaluate(R, ranks);
+
+  // Tile Value Scoring ships on, so rank-based scoring is now the variant-off
+  // path. It is still a supported way to play and still has to be right, so the
+  // whole original suite runs against a ruleset with the variant switched off —
+  // including the upper bonus the preset carries with it.
+  const RANK = labWith({
+    upperBonusPoints: R.rankScoring.upperBonusPoints,
+    variants: { tileValueScoring: false, redTile: false }
+  });
+  const e = (ranks) => evaluate(RANK, ranks);
 
   /* Rank conversion — rulebook §1 */
   check('rank', 'length to rank', [2, 3, 4, 5, 6, 7, 8, 9, 13].map((l) => lengthToRank(R, l)), [0, 1, 2, 3, 4, 5, 6, 6, 6]);
@@ -67,13 +87,7 @@ export async function run() {
 
   /* Tile Value Scoring — the lower section pays letters, qualification is unchanged.
      Every assertion above doubles as proof the variant-off path did not move. */
-  const TV = effectiveRuleset({
-    enabled: true,
-    values: {
-      ...labDefaults(),
-      variants: { ...labDefaults().variants, tileValueScoring: true }
-    }
-  });
+  const TV = labWith({ variants: { redTile: false } });
   const tvals = [10, 8, 6, 4, 2]; // sums to 30
   const t5 = (ranks) => evaluate(TV, ranks, { tileValues: tvals });
 
@@ -91,7 +105,8 @@ export async function run() {
   check('tileValue', 'payouts are always integers', Number.isInteger(t5([6, 1, 1, 1, 1]).chance), true);
   check('tileValue', 'empty slots carry no tile value',
     evaluate(TV, [4, 4, 4, 0, 0], { tileValues: [10, 8, 6, 0, 0] }).threeKind, 24);
-  check('tileValue', 'standard rules are untouched', e([5, 5, 5, 1, 2]).threeKind, 18);
+  check('tileValue', 'switching it off restores rank scoring', e([5, 5, 5, 1, 2]).threeKind, 18);
+  check('tileValue', 'it is on in the standard ruleset', R.experimentalVariants.tileValueScoring, true);
   check('tileValue', 'a pre-variant ruleset snapshot does not throw',
     evaluate(
       { ...R, tileValueScoring: undefined, experimentalVariants: { tileValueScoring: true } },
@@ -99,18 +114,79 @@ export async function run() {
       { tileValues: tvals }
     ).threeKind, 18);
 
+  /* Red Tile — it multiplies a lower-section payout, but only when it is in a
+     word that category's qualification actually rests on. */
+  const RED = labWith({});
+  const red = (ranks, slots) => evaluate(RED, ranks, { tileValues: tvals, redTileSlots: slots });
+  const none = [false, false, false, false, false];
+
+  check('redTile', 'no red tile pays the ordinary amount', red([5, 5, 5, 1, 2], none).threeKind, 30);
+  check('redTile', 'a red tile in the tripled rank doubles it',
+    red([5, 5, 5, 1, 2], [true, false, false, false, false]).threeKind, 60);
+  check('redTile', 'a red tile outside the tripled rank does not',
+    red([5, 5, 5, 1, 2], [false, false, false, true, false]).threeKind, 30);
+  check('redTile', 'a red tile in the straight doubles it',
+    red([1, 2, 3, 4, 6], [true, false, false, false, false]).smallStraight, 72);
+  check('redTile', 'a red tile in the free fifth word does not',
+    red([1, 2, 3, 4, 6], [false, false, false, false, true]).smallStraight, 36);
+  check('redTile', 'chance rests on every word',
+    red([6, 1, 1, 1, 1], [false, false, false, false, true]).chance, 45);
+  check('redTile', 'an empty slot cannot be red',
+    red([4, 4, 4, 0, 0], [false, false, false, true, false]).threeKind, 30);
+  check('redTile', 'the upper section is never multiplied',
+    red([3, 3, 3, 1, 2], [true, false, false, false, false]).threes, 9);
+  check('redTile', 'a non-qualifying hand stays at zero',
+    red([5, 5, 1, 2, 3], [true, false, false, false, false]).threeKind, 0);
+  check('redTile', 'the variant off means no multiplier',
+    evaluate(labWith({ variants: { redTile: false } }), [5, 5, 5, 1, 2], {
+      tileValues: tvals,
+      redTileSlots: [true, false, false, false, false]
+    }).threeKind, 30);
+  check('redTile', 'a pre-variant ruleset snapshot does not throw',
+    redTileApplies({ ...R, redTile: undefined }, 'threeKind', [5, 5, 5, 1, 2], [true, false, false, false, false]), false);
+  check('redTile', 'rank scoring can carry it too',
+    evaluate(labWith({ upperBonusPoints: R.rankScoring.upperBonusPoints, variants: { tileValueScoring: false } }),
+      [4, 4, 4, 2, 2], { redTileSlots: [true, false, false, false, false] }).fullHouse, 50);
+
+  /* The draw has to stay reproducible, respect the cap, and actually favour the
+     hard letters — a red tile that lands on E is not a decision. */
+  const redDeal = (seed, turnNo, left) =>
+    drawTurn(RED, seed, turnNo, 40, { redTilesLeft: left }).rack.find((x) => x.red) || null;
+  const seeds = ['RF-7K4M2', 'RF-ZP5KD', 'RF-QQ3TT', 'RF-M8N4P', 'RF-BB2CC', 'RF-LL9WW'];
+  const drawn = seeds.map((s) => redDeal(s, 1, 2));
+  check('redTile', 'the same seed and turn draw the same red tile',
+    drawn.map((x) => (x ? x.id : null)), seeds.map((s) => { const x = redDeal(s, 1, 2); return x ? x.id : null; }));
+  check('redTile', 'the cap suppresses it', seeds.map((s) => redDeal(s, 1, 0)).filter(Boolean).length, 0);
+  check('redTile', 'at most one per rack',
+    drawTurn(RED, 'RF-7K4M2', 1, 40, { redTilesLeft: 2 }).rack.filter((x) => x.red).length <= 1, true);
+  check('redTile', 'a blank is never red', drawn.filter((x) => x && x.blank).length, 0);
+
+  // Averaged over many turns the red tile must be worth clearly more than an
+  // average tile, or the "gravitates towards harder letters" rule is not real.
+  const picks = [];
+  for (let i = 1; i <= 400; i++) {
+    const x = redDeal('RF-SPREAD', i, 2);
+    if (x) picks.push(x.value);
+  }
+  const bagAverage =
+    buildBag(RED).reduce((a, s) => a + tileValue(RED, s), 0) / 100;
+  const redAverage = picks.reduce((a, b) => a + b, 0) / picks.length;
+  check('redTile', 'the draw favours hard letters', redAverage > bagAverage * 2, true);
+  check('redTile', 'the rarity is roughly the configured one',
+    Math.abs(picks.length / 400 - RED.redTile.rarity) < 0.08, true);
+
   /* The hover explanations must agree with what the evaluator actually pays —
      a tooltip that shows different working than the score is worse than none. */
   const last = (x) => x.lines[x.lines.length - 1][1];
   check('explain', 'upper working ends at the payout',
-    last(explainScore(R, 'threes', [3, 3, 3, 1, 2])), e([3, 3, 3, 1, 2]).threes);
+    last(explainScore(RANK, 'threes', [3, 3, 3, 1, 2])), e([3, 3, 3, 1, 2]).threes);
   check('explain', 'rank-sum working ends at the payout',
-    last(explainScore(R, 'threeKind', [5, 5, 5, 1, 2])), e([5, 5, 5, 1, 2]).threeKind);
-  check('explain', 'a flat category says so', explainScore(R, 'largeStraight', [2, 3, 4, 5, 6]).lines.length, 1);
+    last(explainScore(RANK, 'threeKind', [5, 5, 5, 1, 2])), e([5, 5, 5, 1, 2]).threeKind);
+  check('explain', 'a flat category says so', explainScore(RANK, 'largeStraight', [2, 3, 4, 5, 6]).lines.length, 1);
   check('explain', 'rack five shows the rank multiplier',
-    last(explainScore(R, 'rackFive', [4, 4, 4, 4, 4])), 40);
+    last(explainScore(RANK, 'rackFive', [4, 4, 4, 4, 4])), 40);
   check('explain', 'a non-qualifying hand is called out',
-    explainScore(R, 'fullHouse', [1, 2, 3, 4, 5]).qualifies, false);
+    explainScore(RANK, 'fullHouse', [1, 2, 3, 4, 5]).qualifies, false);
   check('explain', 'tile-value working ends at the payout',
     last(explainScore(TV, 'fourKind', [5, 5, 5, 5, 2], tvals)),
     t5([5, 5, 5, 5, 2]).fourKind);
@@ -118,6 +194,14 @@ export async function run() {
     explainScore(TV, 'chance', [1, 1, 1, 1, 1], tvals).lines[1][1], '× 0.75');
   check('explain', 'the upper section is never explained by tile value',
     explainScore(TV, 'ones', [1, 1, 1, 1, 1], tvals).lines[0][0], 'Words of rank 1');
+  check('explain', 'red-tile working ends at the payout',
+    last(explainScore(RED, 'threeKind', [5, 5, 5, 1, 2], tvals, [true, false, false, false, false])),
+    red([5, 5, 5, 1, 2], [true, false, false, false, false]).threeKind);
+  check('explain', 'red-tile working names the bonus',
+    explainScore(RED, 'threeKind', [5, 5, 5, 1, 2], tvals, [true, false, false, false, false]).lines[2][0],
+    'Red tile bonus');
+  check('explain', 'no red tile means no extra line',
+    explainScore(RED, 'threeKind', [5, 5, 5, 1, 2], tvals, none).lines.length, 3);
 
   /* Totals and the upper bonus */
   const card = {
@@ -125,12 +209,16 @@ export async function run() {
     threeKind: 20, fourKind: 0, fullHouse: 25, smallStraight: 30,
     largeStraight: 0, chance: 17, rackFive: 0
   };
-  const t = cardTotals(R, card, 'medium', 142, 27);
+  const t = cardTotals(RANK, card, 'medium', 142, 27);
   check('totals', 'upper subtotal', t.upper, 66);
   check('totals', 'bonus earned at threshold', t.bonus, 35);
   check('totals', 'final total', t.total, 66 + 35 + 92 + 142 + 27);
-  const under = cardTotals(R, { ...card, sixes: 0 }, 'medium', 0, 0);
+  const under = cardTotals(RANK, { ...card, sixes: 0 }, 'medium', 0, 0);
   check('totals', 'no bonus below threshold', under.bonus, 0);
+  check('totals', 'the standard upper bonus matches tile value scoring', R.upperBonusPoints, 100);
+  check('totals', 'a miss penalty comes off the total',
+    cardTotals(RANK, card, 'medium', 142, 27, 15).total, t.total - 15);
+  check('totals', 'no penalty leaves the total alone', cardTotals(RANK, card, 'medium', 142, 27).missPenalty, 0);
 
   /* Difficulty budgets — rulebook §3 */
   check('budget', 'easy / medium / hard', ['easy', 'medium', 'hard'].map((d) => R.difficulty[d].budget), [45, 40, 35]);
@@ -176,18 +264,33 @@ export async function run() {
   check('lab', 'no multiplier on its own makes a run custom',
     labIsModified({ ...labDefaults(), tvRackFive: labDefaults().tvRackFive }), false);
   check('lab', 'the upper bonus honours the lab value',
-    cardTotals(effectiveRuleset({ enabled: true, values: { ...labDefaults(), upperBonusPoints: 100 } }),
-      card, 'medium', 0, 0).bonus, 100);
+    cardTotals(labWith({ upperBonusPoints: 60 }), card, 'medium', 0, 0).bonus, 60);
 
   /* The preset must round-trip, or toggling the variant on and off would strand
-     the player on a Custom run forever. */
+     the player on a Custom run forever. Tile Value Scoring now ships on, so it
+     is switching it OFF that carries the rank-scoring upper bonus in. */
   const D = labDefaults();
-  const presetOn = VARIANT_PRESETS.tileValueScoring(R);
-  const afterOn = { ...D, ...presetOn, variants: { ...D.variants, tileValueScoring: true } };
-  const afterOff = { ...afterOn, upperBonusPoints: D.upperBonusPoints, variants: { ...D.variants } };
-  check('lab', 'the preset raises the upper bonus', presetOn.upperBonusPoints, 100);
-  check('lab', 'turning the variant on makes a run custom', labIsModified(afterOn), true);
-  check('lab', 'turning it back off restores eligibility', labIsModified(afterOff), false);
+  const presetOff = VARIANT_PRESETS.tileValueScoring(R, false);
+  const afterOff = { ...D, ...presetOff, variants: { ...D.variants, tileValueScoring: false } };
+  const afterOn = { ...afterOff, ...VARIANT_PRESETS.tileValueScoring(R, true), variants: { ...D.variants } };
+  check('lab', 'the preset drops the upper bonus when the variant goes off', presetOff.upperBonusPoints, 35);
+  check('lab', 'the preset restores it when the variant comes back on',
+    VARIANT_PRESETS.tileValueScoring(R, true).upperBonusPoints, 100);
+  check('lab', 'turning the variant off makes a run custom', labIsModified(afterOff), true);
+  check('lab', 'turning it back on restores eligibility', labIsModified(afterOn), false);
+  check('lab', 'red tile drags tile value scoring on with it',
+    VARIANT_PRESETS.redTile(R, true).variants.tileValueScoring, true);
+  check('lab', 'red tile holds tile value scoring locked',
+    lockedVariants({ redTile: true }).tileValueScoring, 'redTile');
+  check('lab', 'nothing is locked with red tile off',
+    lockedVariants({ redTile: false }).tileValueScoring, undefined);
+  check('lab', 'the rarity slider reaches the effective ruleset',
+    labWith({ redTileRarity: 0.8 }).redTile.rarity, 0.8);
+  check('lab', 'the free-miss slider reaches the effective ruleset',
+    labWith({ missPenaltyFreeMisses: 3 }).dictionaryMissPenalty.maximumFreeMisses, 3);
+  check('lab', 'an ordinary run carries no variant tag', variantTag(R.experimentalVariants), null);
+  check('lab', 'a deviation is tagged',
+    variantTag({ ...R.experimentalVariants, redTile: false }), 'No Red Tile');
 
   /* Persisted Lab blobs from before this variant existed must not strand anyone */
   const legacy = {
@@ -198,8 +301,10 @@ export async function run() {
     labIsModified(sanitizeLabValues(legacy)), false);
   check('lab', 'the removed variant key is dropped',
     'chanceScoresTileValue' in sanitizeLabValues(legacy).variants, false);
-  check('lab', 'the new variant key is restored',
-    sanitizeLabValues(legacy).variants.tileValueScoring, false);
+  check('lab', 'the new variant key is restored at its default',
+    sanitizeLabValues(legacy).variants.tileValueScoring, true);
+  check('lab', 'the red tile key is restored at its default',
+    sanitizeLabValues(legacy).variants.redTile, true);
   check('lab', 'a real saved setting still survives sanitising',
     sanitizeLabValues({ ...legacy, hintCost: 7 }).hintCost, 7);
 

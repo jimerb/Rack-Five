@@ -69,6 +69,13 @@ export function Results({ state }) {
               <span>Hints used · ${player.hintsUsed}</span><span class="leader"></span>
               <span class="tnum">−${player.hintPointsSpent} already off the bank</span>
             </div>
+            ${t.missPenalty > 0 &&
+            html`<div class="bd-row">
+              <span class="muted">
+                Dictionary misses · ${player.dictionaryMisses}, ${run.ruleset.dictionaryMissPenalty.maximumFreeMisses} free
+              </span>
+              <span class="leader"></span><strong class="tnum">−${t.missPenalty}</strong>
+            </div>`}
             <div class="bd-row total">
               <strong>Total</strong><span class="leader" style="border:0"></span>
               <strong class="tnum">${t.total}</strong>
