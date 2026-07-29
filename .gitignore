@@ -1,3 +1,4 @@
 .claude/settings.local.json
 node_modules/
+app/data/leaderboard.json
 .DS_Store

@@ -15,7 +15,10 @@ import {
   totals,
   me,
   hintCost,
-  categoryName
+  categoryName,
+  setNameDraft,
+  submitLeaderboardEntry,
+  skipLeaderboardEntry
 } from '../state/store.js';
 import { CATEGORIES } from '../engine/categories.js';
 import { lengthToRank } from '../engine/rank.js';
@@ -54,6 +57,8 @@ export function Modals({ state }) {
         return declareModal(state);
       case 'feeling':
         return feelingModal();
+      case 'name-entry':
+        return nameEntryModal(state);
       default:
         return null;
     }
@@ -321,6 +326,41 @@ function declareModal(state) {
             </button>
           `
         )}
+      </div>
+    </div>
+  `;
+}
+
+function nameEntryModal(state) {
+  const pending = state.pendingEntry;
+  if (!pending) return null;
+  const name = state.nameDraft;
+  const submit = () => {
+    if (name.trim()) submitLeaderboardEntry();
+  };
+  return html`
+    <div class="modal" style="width:min(420px,100%)">
+      <div class="kicker-sm">High score · ${pending.totals.total} points</div>
+      <h2 class="modal-title" style="color:var(--t-text)">Enter your name for the leaderboard</h2>
+      <p class="body-14" style="margin:0">
+        A name, initials — whatever you want other players to see next to this run.
+      </p>
+      <input
+        class="text-input"
+        style="margin-top:4px;text-transform:uppercase"
+        value=${name}
+        maxlength="24"
+        placeholder="e.g. TB or Terry B"
+        aria-label="Name or initials for the leaderboard"
+        autofocus
+        onInput=${(e) => setNameDraft(e.target.value)}
+        onKeyDown=${(e) => e.key === 'Enter' && submit()}
+      />
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" onClick=${skipLeaderboardEntry}>Skip</button>
+        <button class="btn" type="button" disabled=${!name.trim()} onClick=${submit}>
+          Save score
+        </button>
       </div>
     </div>
   `;

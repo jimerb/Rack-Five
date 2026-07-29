@@ -105,8 +105,8 @@ function row(b, place, state) {
       <span class="lb-score tnum">${b.score}</span>
       <span class="lb-mid">
         <span style="font-size:13px">
-          ${cap(b.timing)} · ${formatDate(b.date)} · ${b.durationMinutes} min
-          ${b.interrupted ? ' · interrupted' : ''}
+          <strong>${b.name || 'Anonymous'}</strong> · ${cap(b.timing)} · ${formatDate(b.date)} ·${' '}
+          ${b.durationMinutes} min${b.interrupted ? ' · interrupted' : ''}
         </span>
         <span class="lb-meta tnum">
           card ${b.scorecard} · bank ${b.wordBank} · jumbo ${b.jumbo} · upper ${b.upperBonus} ·

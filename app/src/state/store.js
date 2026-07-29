@@ -29,6 +29,7 @@ import {
   dictionaryMeta
 } from '../engine/dictionary.js';
 import { KEYS, read, write, remove, download } from './storage.js';
+import { fetchRemote, pushRemote, mergeBoards } from './leaderboardSync.js';
 import { play, configureAudio, unlockAudio } from '../audio/sfx.js';
 
 /* ── Store primitive ─────────────────────────────────────────────────────── */
@@ -87,7 +88,7 @@ export function initStore() {
   // blob saved under an older variant list strand the player on a Custom run.
   const labValues = sanitizeLabValues(read(KEYS.lab));
   const saved = read(KEYS.save);
-  const leaderboard = read(KEYS.leaderboard) || [];
+  const leaderboard = mergeBoards(read(KEYS.leaderboard) || [], []);
 
   state = {
     ready: true,
@@ -102,9 +103,11 @@ export function initStore() {
     helpCat: null,
     helpTip: null,
     hoverTip: null,
-    lbView: { difficulty: 'medium', timing: 'all' },
+    lbView: { difficulty: 'easy', timing: 'all' },
     leaderboard,
     lastEntryId: null,
+    pendingEntry: null,
+    nameDraft: '',
     dict: { id: settings.dictionaryId, status: 'loading', count: 0 },
     lastResult: null
   };
@@ -112,6 +115,7 @@ export function initStore() {
   applyChrome(settings);
   configureAudio(settings);
   ensureDictionary(settings.dictionaryId);
+  syncLeaderboard();
 
   // A run interrupted by a reload is recorded — PRD §12.8 wants the action log
   // to know, so future competitive modes can apply a stricter policy.
@@ -1126,22 +1130,45 @@ function finishRun() {
     completedAt: Date.now(),
     finalScore: t.total
   };
-  const entry = recordLeaderboardEntry(completed, t);
   play('finish');
   set({
     run: completed,
     turn: null,
-    modal: null,
+    modal: { type: 'name-entry' },
     screen: 'results',
-    lastEntryId: entry.id,
-    lastResult: { totals: t, entry }
+    pendingEntry: { run: completed, totals: t },
+    nameDraft: '',
+    lastEntryId: null,
+    lastResult: { totals: t, entry: null }
   });
   logAction('run_completed', { finalScore: t.total });
   remove(KEYS.save);
   archivePlaytestRun(completed, t);
 }
 
-function recordLeaderboardEntry(run, t) {
+export function setNameDraft(value) {
+  set({ nameDraft: value.slice(0, 24) });
+}
+
+/** Player typed a name/initials and wants their run on the local leaderboard. */
+export function submitLeaderboardEntry() {
+  const pending = state.pendingEntry;
+  if (!pending) return;
+  const name = state.nameDraft.trim();
+  if (!name) return;
+  const entry = recordLeaderboardEntry(pending.run, pending.totals, name);
+  set({ modal: null, pendingEntry: null, lastEntryId: entry.id, lastResult: { totals: pending.totals, entry } });
+  logAction('leaderboard_entry_submitted', {});
+}
+
+/** Player chose not to have this run recorded on the local leaderboard. */
+export function skipLeaderboardEntry() {
+  if (!state.pendingEntry) return;
+  set({ modal: null, pendingEntry: null });
+  logAction('leaderboard_entry_skipped', {});
+}
+
+function recordLeaderboardEntry(run, t, name) {
   const player = me(run);
   const best = run.history.reduce(
     (a, h) => (h.bankedWordValue > a.value ? { word: h.bankedWord, value: h.bankedWordValue } : a),
@@ -1149,6 +1176,7 @@ function recordLeaderboardEntry(run, t) {
   );
   const entry = {
     id: run.runId,
+    name,
     bestWord: best.word,
     bestWordValue: best.value,
     jumboWord: player.jumboWord,
@@ -1172,9 +1200,10 @@ function recordLeaderboardEntry(run, t) {
     // run and a carry-over run are not comparable to each other either.
     variantTag: variantTag(run.ruleset.experimentalVariants)
   };
-  const leaderboard = state.leaderboard.concat([entry]);
+  const leaderboard = mergeBoards(state.leaderboard, [entry]);
   set({ leaderboard });
   write(KEYS.leaderboard, leaderboard);
+  pushRemote(leaderboard);
   return entry;
 }
 
@@ -1356,7 +1385,20 @@ export function playAnother() {
 export function clearLeaderboard() {
   set({ leaderboard: [] });
   write(KEYS.leaderboard, []);
-  toast('Local leaderboard cleared.');
+  pushRemote([]);
+  toast('Leaderboard cleared.');
+}
+
+/** Pull the server's copy, union it with what this browser has, push the result back. */
+function syncLeaderboard() {
+  fetchRemote()
+    .then((remote) => {
+      const merged = mergeBoards(state.leaderboard, remote);
+      set({ leaderboard: merged });
+      write(KEYS.leaderboard, merged);
+      if (merged.length !== remote.length) pushRemote(merged);
+    })
+    .catch(() => {});
 }
 
 export function setLbView(patch) {
