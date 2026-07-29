@@ -121,7 +121,7 @@ export function initStore() {
   // to know, so future competitive modes can apply a stricter policy.
   if (state.run && state.turn) {
     logAction('run_resumed_from_storage', {});
-    if (state.run.timing !== 'relaxed') markInterrupted();
+    markInterrupted('app_reloaded');
   }
   return state;
 }
@@ -258,10 +258,18 @@ function logAction(type, payload = {}) {
   if (state.run.log.length > 6000) state.run.log.splice(0, 1000);
 }
 
-function markInterrupted() {
-  if (!state.run) return;
-  state.run.interrupted = true;
-  logAction('interrupted', { reason: 'app_reloaded' });
+/**
+ * Record that a timed run was left mid-turn. Goes through `set` and the autosave
+ * rather than mutating the live run, because on a phone the common cause is
+ * backgrounding — an app switch, a notification, the lock screen — and the flag
+ * has to still be there when the player comes back to a reloaded tab.
+ */
+export function markInterrupted(reason = 'app_reloaded') {
+  const run = state.run;
+  if (!run || run.interrupted || !state.turn || run.timing === 'relaxed') return;
+  set({ run: { ...run, interrupted: true } });
+  logAction('interrupted', { reason });
+  autosave();
 }
 
 /* ── Navigation ──────────────────────────────────────────────────────────── */
@@ -520,6 +528,7 @@ export function beginTurn(turnNo, carried = []) {
     : 0;
   const { rack, queue } = drawTurn(ruleset, run.seed, turnNo, need, { redTilesLeft });
   const seconds = ruleset.timingSeconds[run.timing];
+  resetTickClock();
 
   const turn = {
     turnNo,
@@ -1209,14 +1218,36 @@ function recordLeaderboardEntry(run, t, name) {
 
 /* ── Timer ───────────────────────────────────────────────────────────────── */
 
+// The clock counts real elapsed seconds rather than one per interval. A mobile
+// browser freezes timers in a backgrounded tab, so counting intervals would hand
+// out unlimited free time to anyone who switched apps mid-turn — and a 1000ms
+// interval drifts noticeably over a long turn even when nothing is wrong.
+//
+// The reference is refreshed on every call, including the calls that decline to
+// count (wrong screen, modal open, no turn), so those remain genuine pauses.
+let lastTickAt = 0;
+
+export function resetTickClock() {
+  lastTickAt = 0;
+}
+
 export function tick() {
   const s = state;
+  const now = Date.now();
+  const since = lastTickAt;
+  lastTickAt = now;
   if (s.screen !== 'game' || !s.turn || s.modal || s.turn.secondsLeft === null) return;
   if (s.turn.expired || s.turn.secondsLeft <= 0) return;
-  const next = s.turn.secondsLeft - 1;
+
+  // A first tick has nothing to measure against, and a clock that jumped
+  // backwards (a device time change) must never award time.
+  const elapsed = since ? Math.max(1, Math.round((now - since) / 1000)) : 1;
+  const next = s.turn.secondsLeft - elapsed;
   if (next > 0) {
     const warnAt = s.run.ruleset.timingSeconds.warningThreshold;
-    if (next === warnAt) play('warn');
+    // Thresholds are crossed rather than landed on: a turn returning from the
+    // background can skip past several seconds in one step.
+    if (next <= warnAt && s.turn.secondsLeft > warnAt) play('warn');
     else if (next <= 5) play('tick');
     set({ turn: { ...s.turn, secondsLeft: next } });
     return;
@@ -1360,7 +1391,11 @@ export function shareSeed() {
   const text = `Try my Rack Five run: ${cap(run.difficulty)}, ${cap(run.timing)}, seed ${run.seed}. I scored ${t.total}.`;
   const payload = `${text}\nRun code: ${code}`;
   if (navigator.share) {
-    navigator.share({ title: 'Rack Five', text }).catch(() => copyShare(payload));
+    // Dismissing the iOS share sheet rejects with AbortError. That is the player
+    // changing their mind, not a failure, so it must not quietly copy instead.
+    navigator.share({ title: 'Rack Five', text }).catch((err) => {
+      if (!err || err.name !== 'AbortError') copyShare(payload);
+    });
   } else {
     copyShare(payload);
   }

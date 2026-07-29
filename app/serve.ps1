@@ -7,8 +7,10 @@
 #
 #   powershell -ExecutionPolicy Bypass -File serve.ps1 [-Port 8123]
 
+# $env:PORT is honoured when -Port is not given, so a second copy can be started
+# alongside one that already holds the default.
 param(
-  [int]$Port = 8123,
+  [int]$Port = $(if ($env:PORT) { [int]$env:PORT } else { 8123 }),
   [switch]$NoBrowser
 )
 
@@ -23,6 +25,7 @@ $mime = @{
   '.mjs'  = 'text/javascript; charset=utf-8'
   '.css'  = 'text/css; charset=utf-8'
   '.json' = 'application/json; charset=utf-8'
+  '.webmanifest' = 'application/manifest+json; charset=utf-8'
   '.txt'  = 'text/plain; charset=utf-8'
   '.woff2'= 'font/woff2'
   '.woff' = 'font/woff'

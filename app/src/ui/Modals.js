@@ -352,6 +352,10 @@ function nameEntryModal(state) {
         maxlength="24"
         placeholder="e.g. TB or Terry B"
         aria-label="Name or initials for the leaderboard"
+        autocapitalize="characters"
+        autocorrect="off"
+        spellcheck="false"
+        enterkeyhint="done"
         autofocus
         onInput=${(e) => setNameDraft(e.target.value)}
         onKeyDown=${(e) => e.key === 'Enter' && submit()}

@@ -23,10 +23,30 @@ serve.cmd
 ```
 
 That starts a dependency-free PowerShell static server on <http://localhost:8123/> and opens it.
-Use `serve.cmd -Port 9000` for a different port. Any static host works just as well — copy the
-`app/` folder to Netlify, GitHub Pages, S3, nginx, whatever. There is nothing to compile.
+Use `serve.cmd -Port 9000` for a different port, or set `$env:PORT`. Any static host works just as
+well — copy the `app/` folder to Netlify, GitHub Pages, S3, nginx, whatever. There is nothing to
+compile.
 
 Engine tests live at <http://localhost:8123/tests/>.
+
+## Hosting it
+
+Serve the contents of `app/` as the site root, or under any path — every reference is relative, so
+`example.com/rack-five/` works without configuration.
+
+Two things a host has to get right:
+
+- **`.js` must be served as `text/javascript`.** The app is real ES modules and the browser refuses a
+  module served as `text/plain` or `application/octet-stream`. Failure looks like a blank page.
+- **`.txt` and `.woff2` must be served as-is.** The dictionary is a 1.7 MB `.txt` (about 450 KB
+  gzipped — worth enabling compression and a long `Cache-Control`, since it is fetched once per
+  session at boot). The fonts are self-hosted `.woff2`.
+
+`/api/leaderboard` is **optional**. Where it does not exist the app notices the 404 once, stops
+asking, and the leaderboard becomes per-device — which is the expected state on a static host. Tell
+testers, or cross-device scores look broken. Where it *does* exist, note that this build has no
+authentication on it: any visitor can overwrite or clear the shared board, and the Gameplay Lab is
+equally open. Both belong behind a credential before the board carries anything worth keeping.
 
 ## What is real
 
@@ -140,7 +160,9 @@ slot = { word, letters:[{c,blank}], rank, tileValue, provisional, tiles[] }
   with window-level listeners, because `dragstart` never fires on touch and a re-render mid-drag must
   not strand the gesture. A press that never travels 8px is a tap; a real drag swallows the click the
   browser fires afterwards. Loose tiles reorder by dragging or drop onto the Build Bar; Build Bar
-  tiles reorder in place.
+  tiles reorder in place. On touch the rack splits the gesture with its own scroller — sideways drags
+  reorder, vertical drags scroll the rack — because a rack that cannot be scrolled to its last row is
+  worse than one that only reorders in one axis. The Build Bar does not scroll, so it takes both axes.
 - **Keyboard.** Every control is a real button. On the board, type letters to build (Shift+letter
   takes a blank), Enter places, Backspace undoes, Escape clears.
 - **Placing a word never opens a dialog** — words are provisional anyway. A three-second undo banner
@@ -151,7 +173,9 @@ slot = { word, letters:[{c,blank}], rank, tileValue, provisional, tiles[] }
   always be able to advance.
 - **The scorecard is never collapsible.** Above 900px it sits beside the board (docked right) and
   each column scrolls inside itself, so the page never scrolls to reach it. Below 900px the columns
-  stack and a jump bar keeps the scorecard one tap away.
+  stack and a jump bar keeps the scorecard one tap away — unless the viewport is also wider than it is
+  tall, which means a phone held sideways. There, stacking would push the Build Bar off the bottom of
+  the screen, so the columns stay side by side and the vertical rhythm compresses instead.
 - **Contextual help** sits beside the budget, refresh, rank strip, Word Bank, Jumbo, slot status,
   the clock and the scorecard.
 

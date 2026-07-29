@@ -139,6 +139,9 @@ export function Setup({ state }) {
               value=${setup.seedInput}
               placeholder="or enter a shared run code"
               aria-label="Enter a shared run code"
+              autocapitalize="characters"
+              autocorrect="off"
+              spellcheck="false"
               onInput=${(e) => setSetup({ seedInput: e.target.value, seedError: null })}
             />
             ${setup.seedError

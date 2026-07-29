@@ -23,9 +23,22 @@ button {
   padding: 0;
   text-align: left;
   cursor: pointer;
+  /* Touch only, so desktop is untouched: kills the 300ms double-tap-zoom wait
+     (a word is built by tapping letters in quick succession, which iOS would
+     otherwise read as a zoom) and the grey flash iOS paints over a tapped
+     control. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 button[disabled], button[aria-disabled='true'] { cursor: not-allowed; }
 input, select, textarea { font: inherit; color: inherit; }
+
+/* iOS Safari and iOS Chrome auto-zoom the page when a field smaller than 16px
+   takes focus, and do not reliably zoom back out. Coarse pointers only, so the
+   desktop type scale is unchanged. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: max(16px, 1em); }
+}
 
 :focus-visible {
   outline: 2px solid var(--t-acc);
@@ -77,13 +90,17 @@ input, select, textarea { font: inherit; color: inherit; }
   font-family: var(--t-fb);
 }
 
+/* The document opts into viewport-fit=cover, so every edge-anchored surface has
+   to hold itself off the notch and the home indicator. env() resolves to 0px
+   everywhere there is no inset, which is every desktop browser. */
 .nav {
   flex: none;
   display: flex;
   align-items: center;
   gap: clamp(10px, 2vw, 22px);
   flex-wrap: wrap;
-  padding: 14px clamp(14px, 3vw, 28px);
+  padding: calc(14px + env(safe-area-inset-top)) calc(clamp(14px, 3vw, 28px) + env(safe-area-inset-right))
+    14px calc(clamp(14px, 3vw, 28px) + env(safe-area-inset-left));
   border-bottom: 1px solid var(--t-line);
 }
 .nav-brand {
@@ -159,7 +176,11 @@ input, select, textarea { font: inherit; color: inherit; }
   overflow: auto;
   display: flex;
   justify-content: center;
-  padding: clamp(20px, 4vh, 44px) clamp(14px, 3vw, 28px) 48px;
+  padding: clamp(20px, 4vh, 44px) calc(clamp(14px, 3vw, 28px) + env(safe-area-inset-right))
+    calc(48px + env(safe-area-inset-bottom)) calc(clamp(14px, 3vw, 28px) + env(safe-area-inset-left));
+  /* Momentum scrolling on iOS, and no rubber-band handoff to the page behind. */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .screen-col { width: 100%; display: flex; flex-direction: column; gap: 26px; }
 .screen-col.w-1020 { max-width: 1020px; }
@@ -447,6 +468,9 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: inset 0 1px 0 var(--t-tile-hi), inset 0 -2px 0 var(--t-tile-lo),
     0 4px 8px rgba(0, 0, 0, 0.42);
   user-select: none;
+  /* A tile is held and dragged, so a long press must not raise the iOS text
+     callout and magnifier over it. */
+  -webkit-touch-callout: none;
 }
 .tile .tl {
   font-family: var(--t-fd);
@@ -474,7 +498,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 26px;
+  bottom: calc(26px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 70;
   max-width: min(560px, calc(100vw - 32px));
@@ -627,13 +651,17 @@ input, select, textarea { font: inherit; color: inherit; }
   z-index: 60;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: calc(20px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right))
+    calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
   background: rgba(6, 12, 10, 0.72);
   backdrop-filter: blur(3px);
 }
 .modal {
   width: min(520px, 100%);
+  /* dvh, so the modal is not taller than the visible area once the mobile
+     browser's own chrome is accounted for. vh first for anything without dvh. */
   max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   overflow: auto;
   display: flex;
   flex-direction: column;

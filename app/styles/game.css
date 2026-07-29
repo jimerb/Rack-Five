@@ -6,7 +6,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 10px clamp(12px, 2.4vw, 24px) 12px;
+  padding: 10px calc(clamp(12px, 2.4vw, 24px) + env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom)) calc(clamp(12px, 2.4vw, 24px) + env(safe-area-inset-left));
   position: relative;
 }
 
@@ -126,8 +127,13 @@
 }
 
 /* The scorecard docks to the right, matching the design's intent, and drops
-   below the board only when there isn't enough width for both side by side. */
-@media (max-width: 900px) {
+   below the board only when there isn't enough width for both side by side.
+   The aspect test keeps a phone held sideways out of it: that viewport is under
+   900px wide but only ~390px tall, and stacking there pushes the build bar off
+   the bottom of the screen, so the word being built cannot be seen while the
+   rack is being tapped. Wide and short wants columns; narrow and tall wants the
+   stack. */
+@media (max-width: 900px) and (max-aspect-ratio: 1 / 1) {
   .game-main {
     flex-direction: column;
     overflow: auto;
@@ -203,14 +209,29 @@
   padding: 2px 2px 4px;
   margin: -2px -2px -4px;
   scrollbar-gutter: stable;
+  /* Scrolling the rack to its end must not then start dragging the page or the
+     column behind it. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .rack-grid .tile {
   aspect-ratio: 1;
   min-height: 52px;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
+  /* The rack is a scroll container, so the tiles have to split the gesture with
+     it: a vertical drag scrolls the rack (the only way to reach the tiles below
+     the fold on a phone), a sideways drag reorders. Without this the browser
+     claims every touch drag for panning and fires pointercancel, which kills the
+     reorder gesture outright. `touch-action` is inert for mouse input, so the
+     desktop drag is unaffected. */
+  touch-action: pan-y;
 }
 .rack-grid .tile .tl { font-size: calc(clamp(20px, 2.4vw, 27px) * var(--tile-letter-scale, 1)); }
-.rack-grid .tile:hover { transform: translateY(-2px); }
+/* Hover-capable pointers only: iOS leaves :hover latched on the last tile you
+   touched, so an unqualified lift would strand tiles in the raised state. */
+@media (hover: hover) {
+  .rack-grid .tile:hover { transform: translateY(-2px); }
+}
 .rack-grid .tile.is-marked {
   box-shadow: inset 0 1px 0 var(--t-tile-hi), 0 0 0 3px var(--t-acc), 0 6px 14px rgba(0, 0, 0, 0.5);
   transform: translateY(-3px);
@@ -228,6 +249,17 @@
 .rack-grid .tile.is-dragging { opacity: 0.45; }
 .rack-grid .tile.is-drop-target { box-shadow: inset 0 1px 0 var(--t-tile-hi), 0 0 0 3px var(--t-acc-hi); }
 .rack-empty { font-size: 13px; color: var(--t-dim); padding: 12px 2px; }
+
+/* A tablet is shorter than the desktop window this cap was tuned for, and at
+   340px the rack plus its header leaves no room for the build bar — you cannot
+   see the word you are assembling while you tap the letters into it. Trading
+   rack height for that is the right way round: the rack is a uniform grid that
+   scrolls without losing your place, and §19.1's tap flow puts every letter one
+   tap from the bar regardless. Coarse pointers only, so no desktop window
+   changes size. */
+@media (pointer: coarse) and (max-height: 820px) {
+  .rack-grid { max-height: min(38vh, 300px); }
+}
 
 /* ── Length becomes rank chips ───────────────────────────────────────────── */
 
@@ -271,8 +303,11 @@
   place-items: center;
   border-radius: var(--t-rad-sm);
   cursor: grab;
+  /* The build bar is a single non-scrolling row, so it can claim the whole
+     gesture in both axes. */
   touch-action: none;
   user-select: none;
+  -webkit-touch-callout: none;
   transform: translateY(-2px);
   background: var(--t-tile);
   box-shadow: inset 0 1px 0 var(--t-tile-hi), 0 0 0 1px var(--t-line-2), 0 5px 10px rgba(0, 0, 0, 0.5);
@@ -479,6 +514,34 @@
 .action-row { flex: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .action-row .btn, .action-row .btn-outline, .action-row .btn-ghost { min-height: 50px; }
 
+/* Below this width the nav no longer fits on one line, and left to wrap freely
+   it took three — 137px of a portrait phone, 118px of a portrait iPad, all of it
+   taken from the board. Two deterministic lines instead: the wordmark and the run
+   controls share the first, the screen links get the second to themselves and
+   scroll sideways within it. Same breakpoint as the column stacking, because it
+   is the same cause — not enough width for everything side by side. */
+@media (max-width: 900px) {
+  /* This overrides the base nav padding, so it has to carry the insets too. */
+  .nav {
+    padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px
+      calc(12px + env(safe-area-inset-left));
+    gap: 8px 10px;
+  }
+  .nav-brand { font-size: 15px; }
+  .nav-items {
+    order: 3;
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-items::-webkit-scrollbar { display: none; }
+  /* Narrower, not shorter: the height is the tap target, and the two-line
+     restructure above is where the vertical saving actually comes from. */
+  .nav-item { font-size: 13px; padding: 0 11px; }
+  .nav-theme-name { display: none; }
+}
+
 /* On a phone the HUD must not eat the board. Everything stays present and in
    the same order — it simply scrolls sideways in one line. */
 @media (max-width: 700px) {
@@ -494,22 +557,81 @@
   .budget-bar { display: none; }
   .hud-clock-wrap { margin-left: 6px; }
   .hud-clock { font-size: 22px; }
-  .nav { padding: 10px 12px; gap: 10px; }
-  .nav-items { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .nav-items::-webkit-scrollbar { display: none; }
   .slots { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
   .slot { min-height: 132px; }
+}
+
+/* A phone held sideways: wide enough for two columns, but only ~350px of usable
+   height for the whole board. Everything stays present — the vertical rhythm is
+   simply compressed so the slots, the rack and the build bar can be on screen
+   together, which is the minimum needed to build a word without scroll-hunting.
+   Keyed on height, so no desktop window of ordinary proportions sees it. */
+@media (max-height: 500px) and (min-aspect-ratio: 1 / 1) {
+  /* The nav wraps to three lines at this width and would take a third of the
+     screen. One line that scrolls sideways instead, as it already does on a
+     narrow phone. */
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 12px;
+    padding: calc(7px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 7px
+      calc(12px + env(safe-area-inset-left));
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav > * { flex: none; }
+  .nav-items { flex-wrap: nowrap; }
+  .game { gap: 7px; padding-top: 7px; }
+  .hud {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 14px;
+    padding: 7px 12px;
+    scrollbar-width: none;
+  }
+  .hud::-webkit-scrollbar { display: none; }
+  .hud > * { flex: none; }
+  .budget-bar { display: none; }
+  .game-main { gap: 9px; }
+  .play-col { gap: 8px; }
+  .slots { grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 7px; }
+  .slot { min-height: 96px; padding: 8px 10px; }
+  /* One or two rows of tiles, scrolled — the rack is the one part of the board
+     that reads fine at a reduced height, because it is a uniform grid. */
+  .rack-grid { max-height: 130px; }
+  .rack-panel { padding: 9px 11px; }
+  /* The rack header wraps to three lines in a column this narrow — 109px, more
+     than the tile grid below it. One sideways-scrolling line instead, the same
+     answer the nav and the HUD already use, so the rank reference stays present
+     rather than being hidden on the device most likely to need it. */
+  .rack-head {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 7px;
+  }
+  .rack-head::-webkit-scrollbar { display: none; }
+  .rack-head > * { flex: none; }
+  .rank-inline { flex-wrap: nowrap; justify-content: flex-start; }
+  .rank-inline .chips { flex-wrap: nowrap; }
+  /* 50px is generous; 44px is the floor the rest of the app holds to. */
+  .action-row .btn, .action-row .btn-outline, .action-row .btn-ghost { min-height: 44px; }
 }
 
 /* ── Narrow-screen jump bar ──────────────────────────────────────────────── */
 
 .jump-bar { display: none; }
 
-@media (max-width: 900px) {
+/* Matches the stacking rule exactly: the bar exists to reach a scorecard that
+   has dropped below the board, so on a sideways phone — where both columns are
+   on screen at once — it would only cover the board it is meant to reach. */
+@media (max-width: 900px) and (max-aspect-ratio: 1 / 1) {
   .jump-bar {
     position: fixed;
     left: 50%;
-    bottom: 14px;
+    /* Clear of the iPhone home indicator, which otherwise sits directly over
+       these buttons and competes with them for the swipe. */
+    bottom: calc(14px + env(safe-area-inset-bottom));
     transform: translateX(-50%);
     z-index: 50;
     display: inline-flex;
@@ -534,7 +656,7 @@
     color: var(--t-acc-hi);
     font-weight: 600;
   }
-  .game { padding-bottom: 68px; }
+  .game { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
 }
 
 /* ── Scorecard ───────────────────────────────────────────────────────────── */
@@ -601,6 +723,8 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;

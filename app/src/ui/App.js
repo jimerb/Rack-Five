@@ -7,7 +7,7 @@ import {
   requestAbandonRun,
   tick,
   hideHelp,
-  getState,
+  markInterrupted,
   me
 } from '../state/store.js';
 import { HelpPopover, HoverTip } from './Help.js';
@@ -38,13 +38,13 @@ export function App({ state }) {
     return () => clearInterval(id);
   }, []);
 
-  // Backgrounding a timed run is recorded rather than silently forgiven.
+  // Backgrounding a timed run is recorded rather than silently forgiven. On a
+  // phone this fires constantly — app switches, lock screen, notifications — so
+  // it goes through the store to be persisted rather than being set on the live
+  // object, where the next reload would lose it.
   useEffect(() => {
     const onVisibility = () => {
-      const s = getState();
-      if (document.hidden && s.run && s.turn && s.run.timing !== 'relaxed') {
-        s.run.interrupted = true;
-      }
+      if (document.hidden) markInterrupted('backgrounded');
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
