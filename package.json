@@ -1,0 +1,9 @@
+{
+  "name": "rack-five-sites-hosting",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-site.mjs",
+    "test": "node --test tests/sites-hosting.test.mjs"
+  }
+}
