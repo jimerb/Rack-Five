@@ -171,11 +171,23 @@ slot = { word, letters:[{c,blank}], rank, tileValue, provisional, tiles[] }
 - **Scoring is a deliberate two-step.** Tapping a row or a "Take now" chip only selects; the footer
   confirms. Any open category can be taken at any time — a player who cannot find more words must
   always be able to advance.
-- **The scorecard is never collapsible.** Above 900px it sits beside the board (docked right) and
-  each column scrolls inside itself, so the page never scrolls to reach it. Below 900px the columns
+- **The scorecard is never collapsible.** Above 1100px it sits beside the board (docked right) and
+  each column scrolls inside itself, so the page never scrolls to reach it. Below 1100px the columns
   stack and a jump bar keeps the scorecard one tap away — unless the viewport is also wider than it is
   tall, which means a phone held sideways. There, stacking would push the Build Bar off the bottom of
   the screen, so the columns stay side by side and the vertical rhythm compresses instead.
+  The limit is 1100px rather than 900px because **iPad Safari reports a ~915px viewport**, which fell
+  through to the desktop layout and squeezed the board into a 465px column — seven tiles a row and the
+  Build Bar off the bottom. Stacked, the same viewport gets twelve tiles a row with the whole rack and
+  the Build Bar on screen together.
+- **The rack is a fixed grid of square tracks, not flexible columns.** `1fr` columns plus
+  `aspect-ratio` on the tile is circular — the tile's height depends on a column width that is itself
+  flexible — and the engines disagree about it: Chromium sizes the auto row from the aspect ratio,
+  Safari sizes it from the tile's `min-height` and lets the taller tile spill into the row beneath.
+  That is why the rack rendered as *overlapping tiles* on iPad and iPhone Safari. Tracks are now a
+  known width and rows the same known height, which no engine can disagree about, and
+  `justify-content: space-between` spreads the leftover width across the tracks so short final rows
+  still line up.
 - **Contextual help** sits beside the budget, refresh, rank strip, Word Bank, Jumbo, slot status,
   the clock and the scorecard.
 

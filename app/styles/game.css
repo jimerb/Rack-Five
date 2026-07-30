@@ -129,11 +129,18 @@
 /* The scorecard docks to the right, matching the design's intent, and drops
    below the board only when there isn't enough width for both side by side.
    The aspect test keeps a phone held sideways out of it: that viewport is under
-   900px wide but only ~390px tall, and stacking there pushes the build bar off
-   the bottom of the screen, so the word being built cannot be seen while the
+   the width limit but only ~390px tall, and stacking there pushes the build bar
+   off the bottom of the screen, so the word being built cannot be seen while the
    rack is being tapped. Wide and short wants columns; narrow and tall wants the
-   stack. */
-@media (max-width: 900px) and (max-aspect-ratio: 1 / 1) {
+   stack.
+   The limit is 1100px rather than 900px because iPad Safari reports ~915px wide.
+   At 900px it fell through to the desktop layout and squeezed the board into a
+   465px column — seven tiles a row, six rows deep, with the build bar pushed off
+   the bottom. Stacked, the board gets the full width instead: thirteen tiles a
+   row, the whole rack and the build bar on screen together, and the scorecard one
+   tap away on the jump bar. A landscape desktop window is excluded by the aspect
+   test, so only genuinely tall-and-narrow viewports change. */
+@media (max-width: 1100px) and (max-aspect-ratio: 1 / 1) {
   .game-main {
     flex-direction: column;
     overflow: auto;
@@ -201,7 +208,21 @@
    at typical widths every tile fits and this never engages. */
 .rack-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  /* Fixed tracks with explicitly sized rows, not `1fr` columns plus
+     `aspect-ratio` on the tile. That pairing is circular — the tile's height
+     depends on a column width that is itself flexible — and the engines resolve
+     it differently: Chromium sizes the auto row from the aspect ratio, Safari
+     sizes it from the tile's `min-height` and then lets the taller tile spill
+     into the row beneath, which is why the rack rendered as overlapping tiles on
+     iPad and iPhone Safari. A track that is a known width and a row that is the
+     same known height cannot disagree anywhere.
+     `justify-content: space-between` spreads the leftover width across the
+     column *tracks*, so every row — including a short final one — still lines up
+     on the same columns. */
+  --rack-tile: 60px;
+  grid-template-columns: repeat(auto-fill, var(--rack-tile));
+  grid-auto-rows: var(--rack-tile);
+  justify-content: space-between;
   gap: 7px;
   max-height: min(46vh, 340px);
   overflow-y: auto;
@@ -215,8 +236,9 @@
   -webkit-overflow-scrolling: touch;
 }
 .rack-grid .tile {
-  aspect-ratio: 1;
-  min-height: 52px;
+  /* The track supplies both dimensions now. `min-height` in particular has to go:
+     it is the value Safari was sizing the row from. */
+  min-height: 0;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   /* The rack is a scroll container, so the tiles have to split the gesture with
      it: a vertical drag scrolls the rack (the only way to reach the tiles below
@@ -250,15 +272,27 @@
 .rack-grid .tile.is-drop-target { box-shadow: inset 0 1px 0 var(--t-tile-hi), 0 0 0 3px var(--t-acc-hi); }
 .rack-empty { font-size: 13px; color: var(--t-dim); padding: 12px 2px; }
 
-/* A tablet is shorter than the desktop window this cap was tuned for, and at
-   340px the rack plus its header leaves no room for the build bar — you cannot
-   see the word you are assembling while you tap the letters into it. Trading
-   rack height for that is the right way round: the rack is a uniform grid that
-   scrolls without losing your place, and §19.1's tap flow puts every letter one
-   tap from the bar regardless. Coarse pointers only, so no desktop window
-   changes size. */
-@media (pointer: coarse) and (max-height: 820px) {
+/* A tablet or laptop is shorter than the desktop window this cap was tuned for,
+   and at 340px the rack plus its header can leave no room for the build bar — you
+   cannot see the word you are assembling while you tap the letters into it.
+   Trading rack height for that is the right way round: the rack is a uniform grid
+   that scrolls without losing your place, and §19.1's tap flow puts every letter
+   one tap from the bar regardless.
+   Keyed on height alone rather than `pointer: coarse`. Pointer type is the wrong
+   question — a short window needs this whoever is pointing at it — and it also
+   cannot be verified in a desktop browser, which reports `fine` no matter how the
+   viewport is sized. At the usual desktop heights the rack's content is shorter
+   than either cap, so this changes nothing there. */
+@media (max-height: 820px) {
   .rack-grid { max-height: min(38vh, 300px); }
+}
+
+/* A phone in portrait: 60px tracks leave room for only four columns and then
+   scatter ~60px of slack through the gaps. A slightly smaller tile fits five —
+   six on the larger handsets — which reads as a rack rather than as four lonely
+   letters, and stays well clear of the 44px touch-target floor. */
+@media (max-width: 430px) {
+  .rack-grid { --rack-tile: 56px; }
 }
 
 /* ── Length becomes rank chips ───────────────────────────────────────────── */
@@ -514,13 +548,11 @@
 .action-row { flex: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .action-row .btn, .action-row .btn-outline, .action-row .btn-ghost { min-height: 50px; }
 
-/* Below this width the nav no longer fits on one line, and left to wrap freely
-   it took three — 137px of a portrait phone, 118px of a portrait iPad, all of it
-   taken from the board. Two deterministic lines instead: the wordmark and the run
-   controls share the first, the screen links get the second to themselves and
-   scroll sideways within it. Same breakpoint as the column stacking, because it
-   is the same cause — not enough width for everything side by side. */
-@media (max-width: 900px) {
+/* Tighten the nav below the width where it starts to crowd. This part only makes
+   it narrower — dropping the decorative theme name, trimming the type and the
+   padding — which is often enough on its own to keep it on a single line, and
+   never makes it taller. Height is untouched: it is the tap target. */
+@media (max-width: 1100px) {
   /* This overrides the base nav padding, so it has to carry the insets too. */
   .nav {
     padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 8px
@@ -528,23 +560,13 @@
     gap: 8px 10px;
   }
   .nav-brand { font-size: 15px; }
-  .nav-items {
-    order: 3;
-    flex: 1 0 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .nav-items::-webkit-scrollbar { display: none; }
-  /* Narrower, not shorter: the height is the tap target, and the two-line
-     restructure above is where the vertical saving actually comes from. */
   .nav-item { font-size: 13px; padding: 0 11px; }
   .nav-theme-name { display: none; }
-}
 
-/* On a phone the HUD must not eat the board. Everything stays present and in
-   the same order — it simply scrolls sideways in one line. */
-@media (max-width: 700px) {
+  /* The HUD needs roughly 1000px for one line and wrapped to 93px on an iPad —
+     a tenth of the screen, spent on a status strip. Everything stays present and
+     in the same order; it simply scrolls sideways in one line, as it already did
+     on a phone. */
   .hud {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -554,8 +576,36 @@
   }
   .hud::-webkit-scrollbar { display: none; }
   .hud > * { flex: none; }
-  .budget-bar { display: none; }
   .hud-clock-wrap { margin-left: 6px; }
+}
+
+/* Where the nav genuinely cannot hold one line, give it two deterministic ones
+   instead of the three or four it wraps into on its own — 137px of a portrait
+   phone, 121px of an iPad, all taken from the board. The wordmark and the run
+   controls share the first line; the screen links take the second to themselves
+   and scroll sideways within it.
+   The two conditions are an OR. Narrow in any orientation needs this. So does a
+   portrait tablet, which is wide enough that the nav *nearly* fits and so wraps
+   into a ragged second line anyway. A landscape window between the two — 1024x768,
+   an iPad on its side — is deliberately excluded: the tightening above already
+   keeps it on one line at 67px, and forcing a second would make it taller, not
+   shorter. */
+@media (max-width: 950px), (max-width: 1100px) and (max-aspect-ratio: 1 / 1) {
+  .nav-items {
+    order: 3;
+    flex: 1 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-items::-webkit-scrollbar { display: none; }
+}
+
+/* Phone-only extras on top of the tablet treatment above. */
+@media (max-width: 700px) {
+  /* The one HUD item worth dropping rather than scrolling past: the same numbers
+     are spelled out in words immediately to its left. */
+  .budget-bar { display: none; }
   .hud-clock { font-size: 22px; }
   .slots { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
   .slot { min-height: 132px; }
@@ -625,7 +675,7 @@
 /* Matches the stacking rule exactly: the bar exists to reach a scorecard that
    has dropped below the board, so on a sideways phone — where both columns are
    on screen at once — it would only cover the board it is meant to reach. */
-@media (max-width: 900px) and (max-aspect-ratio: 1 / 1) {
+@media (max-width: 1100px) and (max-aspect-ratio: 1 / 1) {
   .jump-bar {
     position: fixed;
     left: 50%;
