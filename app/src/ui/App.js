@@ -8,6 +8,7 @@ import {
   tick,
   hideHelp,
   markInterrupted,
+  openNavMenu,
   me
 } from '../state/store.js';
 import { HelpPopover, HoverTip } from './Help.js';
@@ -30,6 +31,15 @@ const NAV = [
   { key: 'howto', label: 'How to Play' },
   { key: 'settings', label: 'Settings' }
 ];
+
+/** What the phone menu button says. The button replaces the row of links, so it
+ *  has to answer "where am I?" as well as offer to go elsewhere. */
+function currentLabel(screen, inRun) {
+  if (screen === 'game' || screen === 'setup') return inRun ? 'Resume game' : 'Play';
+  if (screen === 'lab') return 'Settings';
+  const match = NAV.find((n) => n.key === screen);
+  return match ? match.label : 'Menu';
+}
 
 export function App({ state }) {
   // One interval for the whole app. tick() decides whether this second counts.
@@ -97,6 +107,13 @@ export function App({ state }) {
             `
           )}
         </div>
+        <!-- Phone widths only. The links above need a second nav line to fit,
+             which costs the board more height than it can spare, so there they
+             collapse into this and the sheet behind it. -->
+        <button class="nav-menu-btn" type="button" onClick=${openNavMenu}>
+          <span class="nav-menu-icon" aria-hidden="true"></span>
+          ${currentLabel(screen, inRun)}
+        </button>
         <div class="nav-right">
           ${inRun &&
           html`

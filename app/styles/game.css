@@ -248,7 +248,25 @@
      desktop drag is unaffected. */
   touch-action: pan-y;
 }
-.rack-grid .tile .tl { font-size: calc(clamp(20px, 2.4vw, 27px) * var(--tile-letter-scale, 1)); }
+/* Proportional to the tile, not to the window. The letter belongs to the tile it
+   sits in, and the old viewport term made that accidental: a 60px tile got a
+   27px letter on a desktop and a 22px one on an iPad purely because the window
+   was narrower. Now every 60px tile looks the same everywhere, and a tile the
+   fitter has shrunk to 48px gets a letter that still fits inside it rather than
+   a 27px one overflowing its own box.
+   0.45 is chosen to land on exactly 27px at the 60px tile the desktop layout was
+   tuned around, so that case does not move. */
+.rack-grid .tile .tl {
+  font-size: calc(var(--rack-tile, 60px) * 0.45 * var(--tile-letter-scale, 1));
+}
+/* The value keeps its 10px — smaller stops being readable, and the player is
+   reading it to decide a word — but its inset scales, so it sits the same
+   proportional distance into the corner at every tile size instead of creeping
+   toward the letter. At 60px these resolve to today's 6px and 3px exactly. */
+.rack-grid .tile .tv {
+  right: calc(var(--rack-tile, 60px) * 0.1);
+  bottom: calc(var(--rack-tile, 60px) * 0.05);
+}
 /* Hover-capable pointers only: iOS leaves :hover latched on the last tile you
    touched, so an unqualified lift would strand tiles in the raised state. */
 @media (hover: hover) {
@@ -290,9 +308,64 @@
 /* A phone in portrait: 60px tracks leave room for only four columns and then
    scatter ~60px of slack through the gaps. A slightly smaller tile fits five —
    six on the larger handsets — which reads as a rack rather than as four lonely
-   letters, and stays well clear of the 44px touch-target floor. */
+   letters, and stays well clear of the 44px touch-target floor.
+   This is the no-JS fallback. When fitRack runs it writes --rack-tile inline and
+   supersedes this, having measured what actually fits rather than guessed. */
 @media (max-width: 430px) {
   .rack-grid { --rack-tile: 56px; }
+}
+
+/* A phone in portrait is the tightest case that matters, and it is short of
+   exactly one thing: height. Two of the three bands above the board — the nav's
+   second line and the rack's wrapped header — cost ~150px between them and carry
+   no game state. Both collapse here and the board gets the difference.
+   The HUD deliberately does not: it is live state — turn, budget, refreshes,
+   clock — and hiding what the player is playing against behind a tap would be a
+   real loss for 47px. It keeps its single sideways-scrolling line. */
+@media (max-width: 700px) and (max-aspect-ratio: 1 / 1) {
+  /* The links move into the sheet; the button that opens it also names the
+     screen you are on, so the bar still answers "where am I?". */
+  .nav-items { display: none; }
+  .nav-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid var(--t-line-2);
+    border-radius: var(--t-btn-rad);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--t-acc-hi);
+  }
+  .nav-brand { font-size: 14px; letter-spacing: 0.16em; }
+  .nav-quit-btn { font-size: 12px; padding: 0 10px; }
+  /* The sheet carries the theme switch, and keeping a second copy in the bar
+     pushed the row to a second line — which is the whole thing this block exists
+     to prevent. Abandon run stays: it is destructive and belongs in the open. */
+  .nav-theme-btn { display: none; }
+  .rack-head {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .rack-head::-webkit-scrollbar { display: none; }
+  .rack-head > * { flex: none; }
+  .rank-inline { flex-wrap: nowrap; justify-content: flex-start; }
+  .rank-inline .chips { flex-wrap: nowrap; }
+
+  /* Let the rack have the height the two collapses above just freed. The generic
+     caps exist to stop the rack crowding out the rest of the board, but on a
+     phone the fitter already enforces a better version of that rule: it reserves
+     the build-bar tile row before sizing anything, so the word being assembled
+     cannot be pushed off screen no matter how tall this allows the rack to get.
+     With the old 38vh here the cap, not the reserve, was the binding constraint —
+     it held a 667px phone to four rows where five fit. Raised, the reserve takes
+     over and the word slots become the thing you scroll to, which is the order
+     the game actually wants. */
+  .rack-grid { max-height: min(62vh, 460px); }
 }
 
 /* ── Length becomes rank chips ───────────────────────────────────────────── */

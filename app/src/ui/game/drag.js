@@ -13,6 +13,16 @@ import { moveBuild, moveLoose, tapLoose } from '../../state/store.js';
 const THRESHOLD = 8;
 let drag = null;
 
+/**
+ * True while a tile is being held. The rack fitter reads this and declines to
+ * resize mid-gesture: `onMove` hit-tests with `elementFromPoint`, so retiling the
+ * grid under a stationary finger would cascade reorders the player never asked
+ * for.
+ */
+export function isDragging() {
+  return drag !== null;
+}
+
 // Taps are handled by the elements' own click handlers, so that Enter and Space
 // on a focused tile work exactly like a tap. When a gesture turns into a real
 // drag we swallow the click the browser fires afterwards.

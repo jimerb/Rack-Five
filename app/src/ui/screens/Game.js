@@ -1,4 +1,4 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect, useLayoutEffect } from 'preact/hooks';
 import { html, cx } from '../html.js';
 import {
   tapLoose,
@@ -25,12 +25,31 @@ import { CATEGORIES } from '../../engine/categories.js';
 import { lengthToRank, rankTable } from '../../engine/rank.js';
 import { Scorecard } from '../game/Scorecard.js';
 import { startBuildDrag, startLooseDrag } from '../game/drag.js';
+import { fitRack, observeRack, resetRackFit } from '../game/fitRack.js';
 import { HelpDot, tipProps } from '../Help.js';
 import { formatClock } from './Setup.js';
 
 export function Game({ state }) {
   const run = state.run;
   const turn = state.turn;
+
+  // Size the rack to the space it has. Before paint rather than after, so a
+  // freshly dealt rack is never shown at the wrong size for a frame. Runs on
+  // every render because the right tile size depends on how many tiles are left,
+  // and fitRack returns early when nothing it measures has moved.
+  useLayoutEffect(() => {
+    fitRack();
+  });
+
+  // Viewport changes — resize, browser zoom, pinch, a rotated phone — arrive
+  // outside the render cycle and need their own subscription.
+  useEffect(() => {
+    const stop = observeRack();
+    return () => {
+      stop();
+      resetRackFit();
+    };
+  }, []);
 
   // Keyboard play: type letters to build, Enter to place, Backspace to undo.
   useEffect(() => {

@@ -137,6 +137,18 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--t-acc);
   box-shadow: 0 0 8px rgba(217, 165, 76, 0.6);
 }
+/* Hidden until the phone breakpoint turns it on — the links themselves are the
+   navigation everywhere there is room for them. */
+.nav-menu-btn { display: none; }
+.nav-menu-icon {
+  position: relative;
+  width: 15px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 -5px 0 currentColor, 0 5px 0 currentColor;
+}
+
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .nav-theme-name {
   font-size: 11px;
@@ -673,6 +685,27 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 26px 60px rgba(0, 0, 0, 0.6);
   animation: r5pop 0.2s ease;
 }
+/* The nav sheet rides the bottom edge on a phone, where the thumb is, rather
+   than sitting centred like the modals that ask a question. */
+.modal-backdrop.is-sheet { align-content: end; }
+.nav-sheet { width: min(420px, 100%); gap: 12px; }
+.nav-sheet-list { display: flex; flex-direction: column; gap: 4px; }
+.nav-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: var(--t-btn-rad);
+  font-size: 16px;
+  color: var(--t-muted);
+}
+.nav-sheet-item.is-active {
+  background: var(--t-acc-soft);
+  color: var(--t-acc-hi);
+  font-weight: 600;
+}
+
 .modal-title {
   font-family: var(--t-fd);
   font-weight: var(--t-fwd);

@@ -180,6 +180,14 @@ slot = { word, letters:[{c,blank}], rank, tileValue, provisional, tiles[] }
   through to the desktop layout and squeezed the board into a 465px column — seven tiles a row and the
   Build Bar off the bottom. Stacked, the same viewport gets twelve tiles a row with the whole rack and
   the Build Bar on screen together.
+- **On a phone in portrait the nav collapses into a sheet.** Below 700px the five screen links need a
+  second nav line, and that line costs the board more height than it can spare. They move into a
+  bottom sheet behind a Menu button that also names the screen you are on, so the bar still answers
+  "where am I?". "Abandon run" deliberately stays in the bar: burying a destructive action one level
+  deeper makes it harder to find but no harder to hit by accident. The rack header gets the same
+  single-scrolling-line treatment there — it was wrapping to 109px, more than two rows of letters.
+  The **HUD is deliberately left alone**: it is live game state — turn, budget, refreshes, clock —
+  and hiding what the player is playing against behind a tap would be a real loss for 47px.
 - **The rack is a fixed grid of square tracks, not flexible columns.** `1fr` columns plus
   `aspect-ratio` on the tile is circular — the tile's height depends on a column width that is itself
   flexible — and the engines disagree about it: Chromium sizes the auto row from the aspect ratio,
@@ -188,6 +196,23 @@ slot = { word, letters:[{c,blank}], rank, tileValue, provisional, tiles[] }
   known width and rows the same known height, which no engine can disagree about, and
   `justify-content: space-between` spreads the leftover width across the tracks so short final rows
   still line up.
+- **The tile size is measured, not declared** — see `src/ui/game/fitRack.js`. The column count is a
+  step function of width and the row count a step function of the column count, so the height the
+  rack *needs* moves in ~67px jumps while the height it is *allowed* moves smoothly with the
+  viewport. Nothing reconciled the two, and at unlucky widths the last row landed past the cap and
+  was sliced in half — most visibly on a 4K monitor at 100% browser zoom, where 90% looked fine. CSS
+  cannot fix it, because the relationship is circular. `fitRack` searches tile sizes from largest to
+  smallest for the one whose whole rack fits, and owns the rack's height too, capping it to a whole
+  number of rows so a half-height row of clipped letters is never shown. It is a progressive
+  enhancement: the CSS alone still produces the old layout, so a browser that never runs it, or a
+  thrown error, degrades to exactly what shipped before.
+- **Nothing resizes under your hands.** The fitter holds the rack completely still while a word is
+  being assembled — every tap frees a tile and three taps can free a whole row, which would otherwise
+  reflow the grid mid-word — and refuses to run at all mid-drag, since `drag.js` hit-tests with
+  `elementFromPoint`. It takes the freed space back when the word is placed and the build bar empties.
+  It also measures only in layout coordinates (`offsetTop`, `clientWidth`), never against the
+  viewport: `getBoundingClientRect().top` inside a scrolling column would make the tile size a
+  function of scroll position, and writing a size changes `scrollHeight`, which is a loop.
 - **Contextual help** sits beside the budget, refresh, rank strip, Word Bank, Jumbo, slot status,
   the clock and the scorecard.
 

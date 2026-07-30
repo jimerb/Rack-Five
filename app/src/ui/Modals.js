@@ -18,7 +18,10 @@ import {
   categoryName,
   setNameDraft,
   submitLeaderboardEntry,
-  skipLeaderboardEntry
+  skipLeaderboardEntry,
+  go,
+  goPlay,
+  cycleTheme
 } from '../state/store.js';
 import { CATEGORIES } from '../engine/categories.js';
 import { lengthToRank } from '../engine/rank.js';
@@ -59,17 +62,37 @@ export function Modals({ state }) {
         return feelingModal();
       case 'name-entry':
         return nameEntryModal(state);
+      case 'nav':
+        return navModal(state);
       default:
         return null;
     }
   };
 
-  if (!run && modal.type !== 'run-in-progress') return null;
+  if (!run && !['run-in-progress', 'nav'].includes(modal.type)) return null;
   if (!turn && ['refresh', 'blank', 'hint', 'timeout', 'intent', 'declare'].includes(modal.type)) {
     return null;
   }
 
-  return html`<div class="modal-backdrop" role="dialog" aria-modal="true">${body()}</div>`;
+  // The nav sheet is the one overlay you dismiss by tapping past it: it is
+  // navigation, not a decision, so there is nothing to confirm or lose. Every
+  // other modal here is asking something and keeps its explicit buttons.
+  const sheet = modal.type === 'nav';
+  return html`
+    <div
+      class=${'modal-backdrop' + (sheet ? ' is-sheet' : '')}
+      role="dialog"
+      aria-modal="true"
+      aria-label=${sheet ? 'Menu' : undefined}
+      onClick=${sheet
+        ? (e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }
+        : undefined}
+    >
+      ${body()}
+    </div>
+  `;
 }
 
 function refreshModal(state) {
@@ -383,6 +406,64 @@ function feelingModal() {
             </button>
           `
         )}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * The screen links, as a bottom sheet. Reached only from the phone-width Menu
+ * button — above that breakpoint the links are all still in the bar and this is
+ * unreachable, so it mirrors the nav rather than replacing it.
+ *
+ * "Abandon run" is deliberately not in here. Burying a destructive, irreversible
+ * action one level deeper makes it harder to find but no harder to hit by
+ * accident, which is the wrong trade; it stays visible in the bar.
+ */
+function navModal(state) {
+  const screen = state.screen;
+  const inRun = !!(state.run && state.turn && !state.run.completedAt);
+  const isCurrent = (key) =>
+    key === 'play'
+      ? screen === 'setup' || screen === 'game'
+      : screen === key || (key === 'settings' && screen === 'lab');
+
+  const items = [
+    { key: 'home', label: 'Home' },
+    { key: 'play', label: inRun ? 'Resume game' : 'Play' },
+    { key: 'leaderboards', label: 'Leaderboards' },
+    { key: 'howto', label: 'How to Play' },
+    { key: 'settings', label: 'Settings' }
+  ];
+
+  const goTo = (key) => {
+    closeModal();
+    if (key === 'play') goPlay();
+    else go(key);
+  };
+
+  return html`
+    <div class="modal nav-sheet">
+      <div class="kicker-sm">Go to</div>
+      <div class="nav-sheet-list">
+        ${items.map(
+          (item) => html`
+            <button
+              key=${item.key}
+              type="button"
+              class=${'nav-sheet-item' + (isCurrent(item.key) ? ' is-active' : '')}
+              aria-current=${isCurrent(item.key) ? 'page' : undefined}
+              onClick=${() => goTo(item.key)}
+            >
+              <span>${item.label}</span>
+              ${item.key === 'play' && inRun && html`<span class="live-dot" />`}
+            </button>
+          `
+        )}
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" type="button" onClick=${cycleTheme}>Switch theme</button>
+        <button class="btn" type="button" onClick=${closeModal}>Close</button>
       </div>
     </div>
   `;

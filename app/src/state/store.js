@@ -336,6 +336,17 @@ export function closeModal() {
   set({ modal: null });
 }
 
+/**
+ * The screen links, as a sheet. On a phone the nav needs two lines to hold them
+ * and that is 12% of the screen spent on navigation, competing with the board for
+ * the one axis the board is short of. Routed through the existing modal state so
+ * it inherits the backdrop and the single-overlay-at-a-time rule rather than
+ * inventing a second overlay mechanism.
+ */
+export function openNavMenu() {
+  set({ modal: { type: 'nav' } });
+}
+
 export function showHelp(key, anchor) {
   set({ helpTip: state.helpTip && state.helpTip.key === key ? null : { key, anchor } });
 }
