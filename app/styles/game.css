@@ -128,19 +128,21 @@
 
 /* The scorecard docks to the right, matching the design's intent, and drops
    below the board only when there isn't enough width for both side by side.
-   The aspect test keeps a phone held sideways out of it: that viewport is under
-   the width limit but only ~390px tall, and stacking there pushes the build bar
-   off the bottom of the screen, so the word being built cannot be seen while the
-   rack is being tapped. Wide and short wants columns; narrow and tall wants the
-   stack.
    The limit is 1100px rather than 900px because iPad Safari reports ~915px wide.
    At 900px it fell through to the desktop layout and squeezed the board into a
    465px column — seven tiles a row, six rows deep, with the build bar pushed off
-   the bottom. Stacked, the board gets the full width instead: thirteen tiles a
-   row, the whole rack and the build bar on screen together, and the scorecard one
-   tap away on the jump bar. A landscape desktop window is excluded by the aspect
-   test, so only genuinely tall-and-narrow viewports change. */
-@media (max-width: 1100px) and (max-aspect-ratio: 1 / 1) {
+   the bottom. Stacked, the board gets the full width instead, the whole rack and
+   the build bar sit on screen together, and the scorecard gets the full width too
+   rather than being crushed into a 370px gutter, one tap away on the jump bar.
+
+   The second test is on *height*, not aspect. An earlier version required
+   portrait, which read sensibly but excluded the case it most needed to cover: an
+   iPad in landscape is about 915x700, so it is under the width limit and still
+   wider than it is tall, and it fell through to the cramped two-column layout.
+   Height is the honest question, because the only viewport that genuinely cannot
+   afford to stack is one too short to show a stacked rack and build bar together
+   — a phone on its side, at ~390px. Everything taller has the room. */
+@media (max-width: 1100px) and (min-height: 501px) {
   .game-main {
     flex-direction: column;
     overflow: auto;
@@ -316,34 +318,17 @@
 }
 
 /* A phone in portrait is the tightest case that matters, and it is short of
-   exactly one thing: height. Two of the three bands above the board — the nav's
-   second line and the rack's wrapped header — cost ~150px between them and carry
-   no game state. Both collapse here and the board gets the difference.
+   exactly one thing: height. The rack's wrapped header carries no game state and
+   costs more than two rows of letters, so it collapses here and the board gets
+   the difference. (The nav does the same, one block further down, at the wider
+   breakpoint where it starts needing two lines.)
    The HUD deliberately does not: it is live state — turn, budget, refreshes,
    clock — and hiding what the player is playing against behind a tap would be a
    real loss for 47px. It keeps its single sideways-scrolling line. */
 @media (max-width: 700px) and (max-aspect-ratio: 1 / 1) {
-  /* The links move into the sheet; the button that opens it also names the
-     screen you are on, so the bar still answers "where am I?". */
-  .nav-items { display: none; }
-  .nav-menu-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    min-height: 38px;
-    padding: 0 13px;
-    border: 1px solid var(--t-line-2);
-    border-radius: var(--t-btn-rad);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--t-acc-hi);
-  }
-  .nav-brand { font-size: 14px; letter-spacing: 0.16em; }
-  .nav-quit-btn { font-size: 12px; padding: 0 10px; }
-  /* The sheet carries the theme switch, and keeping a second copy in the bar
-     pushed the row to a second line — which is the whole thing this block exists
-     to prevent. Abandon run stays: it is destructive and belongs in the open. */
-  .nav-theme-btn { display: none; }
+  /* Narrower gutters buy the rack ~14px, and at phone widths 14px is worth a
+     whole extra column of tiles — which is worth a whole row of height. */
+  .rack-panel { padding: 11px 8px; }
   .rack-head {
     flex-wrap: nowrap;
     overflow-x: auto;
@@ -618,8 +603,18 @@
 
 /* ── Action row ──────────────────────────────────────────────────────────── */
 
+/* Refresh and Hint share a line and split it. Left to their intrinsic widths they
+   wrapped onto two rows inside the ~370px scorecard column, spending twice the
+   height on two buttons for no reason — `min-width: 0` is what lets them shrink
+   below their content instead of forcing the wrap. They still wrap on a phone,
+   where one per line is genuinely the right answer. */
 .action-row { flex: none; display: flex; flex-wrap: wrap; gap: 8px; }
-.action-row .btn, .action-row .btn-outline, .action-row .btn-ghost { min-height: 50px; }
+.action-row > * { flex: 1 1 auto; min-width: 0; }
+.action-row .btn, .action-row .btn-outline, .action-row .btn-ghost {
+  min-height: 50px;
+  justify-content: center;
+  text-align: center;
+}
 
 /* Tighten the nav below the width where it starts to crowd. This part only makes
    it narrower — dropping the decorative theme name, trimming the type and the
@@ -652,26 +647,38 @@
   .hud-clock-wrap { margin-left: 6px; }
 }
 
-/* Where the nav genuinely cannot hold one line, give it two deterministic ones
-   instead of the three or four it wraps into on its own — 137px of a portrait
-   phone, 121px of an iPad, all taken from the board. The wordmark and the run
-   controls share the first line; the screen links take the second to themselves
-   and scroll sideways within it.
-   The two conditions are an OR. Narrow in any orientation needs this. So does a
-   portrait tablet, which is wide enough that the nav *nearly* fits and so wraps
-   into a ragged second line anyway. A landscape window between the two — 1024x768,
-   an iPad on its side — is deliberately excluded: the tightening above already
-   keeps it on one line at 67px, and forcing a second would make it taller, not
-   shorter. */
+/* Where the nav cannot hold one line, the screen links move into a sheet rather
+   than wrapping onto a second.
+   Wrapping was the first attempt and it looked broken on a tablet: the wordmark
+   sat far left, the run controls far right, and the links dropped underneath,
+   leaving a wide empty band across the top of the screen that read as a mistake
+   and took ~44px from the board to do it. One line and a Menu button — which also
+   names the screen you are on, so the bar still answers "where am I?" — is both
+   tidier and shorter.
+   The two conditions are an OR: narrow in any orientation needs this, and so does
+   a portrait tablet, which is wide enough that the nav *nearly* fits and wraps
+   into a ragged second line anyway. */
 @media (max-width: 950px), (max-width: 1100px) and (max-aspect-ratio: 1 / 1) {
-  .nav-items {
-    order: 3;
-    flex: 1 0 100%;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
+  .nav-items { display: none; }
+  .nav-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 38px;
+    padding: 0 13px;
+    border: 1px solid var(--t-line-2);
+    border-radius: var(--t-btn-rad);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--t-acc-hi);
   }
-  .nav-items::-webkit-scrollbar { display: none; }
+  .nav-brand { font-size: 14px; letter-spacing: 0.16em; }
+  .nav-quit-btn { font-size: 12px; padding: 0 10px; }
+  /* The sheet carries the theme switch. A second copy in the bar is what pushed
+     the row onto a second line in the first place. Abandon run stays visible:
+     it is destructive and belongs in the open, not buried in a menu. */
+  .nav-theme-btn { display: none; }
+  .nav-theme-name { display: none; }
 }
 
 /* Phone-only extras on top of the tablet treatment above. */
@@ -748,7 +755,7 @@
 /* Matches the stacking rule exactly: the bar exists to reach a scorecard that
    has dropped below the board, so on a sideways phone — where both columns are
    on screen at once — it would only cover the board it is meant to reach. */
-@media (max-width: 1100px) and (max-aspect-ratio: 1 / 1) {
+@media (max-width: 1100px) and (min-height: 501px) {
   .jump-bar {
     position: fixed;
     left: 50%;

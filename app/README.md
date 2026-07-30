@@ -179,15 +179,35 @@ slot = { word, letters:[{c,blank}], rank, tileValue, provisional, tiles[] }
   The limit is 1100px rather than 900px because **iPad Safari reports a ~915px viewport**, which fell
   through to the desktop layout and squeezed the board into a 465px column — seven tiles a row and the
   Build Bar off the bottom. Stacked, the same viewport gets twelve tiles a row with the whole rack and
-  the Build Bar on screen together.
-- **On a phone in portrait the nav collapses into a sheet.** Below 700px the five screen links need a
-  second nav line, and that line costs the board more height than it can spare. They move into a
-  bottom sheet behind a Menu button that also names the screen you are on, so the bar still answers
-  "where am I?". "Abandon run" deliberately stays in the bar: burying a destructive action one level
-  deeper makes it harder to find but no harder to hit by accident. The rack header gets the same
-  single-scrolling-line treatment there — it was wrapping to 109px, more than two rows of letters.
-  The **HUD is deliberately left alone**: it is live game state — turn, budget, refreshes, clock —
-  and hiding what the player is playing against behind a tap would be a real loss for 47px.
+  the Build Bar on screen together, and the scorecard goes from a 370px gutter to the full 856px.
+  The second test is on **height, not orientation**. Requiring portrait read sensibly and excluded the
+  case it most needed to cover: an iPad in landscape is ~915x700, under the width limit and still
+  wider than it is tall, so it fell through to the cramped two-column layout. Height is the honest
+  question — the only viewport that genuinely cannot afford to stack is one too short to show a
+  stacked rack and Build Bar together, which is a phone on its side at ~390px.
+- **Where the nav cannot hold one line, the screen links collapse into a sheet.** Wrapping onto a
+  second line was the first attempt and it read as a mistake on a tablet: wordmark far left, run
+  controls far right, links underneath, and a wide empty band across the top costing ~44px of board.
+  They now move into a bottom sheet behind a Menu button that also names the screen you are on, so the
+  bar still answers "where am I?". "Abandon run" deliberately stays in the bar: burying a destructive
+  action one level deeper makes it harder to find but no harder to hit by accident. The rack header
+  gets the same single-scrolling-line treatment on phones — it was wrapping to 109px, more than two
+  rows of letters. The **HUD is deliberately left alone**: it is live game state — turn, budget,
+  refreshes, clock — and hiding what the player is playing against behind a tap would be a real loss
+  for 47px.
+- **Tooltips are a hover affordance and police that themselves.** A touch device synthesises
+  `mouseenter` on tap and never sends `mouseleave`, and tapping a button focuses it, so both openers
+  fired on a plain tap and nothing closed them — putting a fixed-position bubble over the very control
+  the tap was aiming for. On the scorecard that meant selecting a category and then being unable to
+  reach the button that scores it. The mouse opener now requires a pointer that genuinely hovers and
+  the keyboard opener requires `:focus-visible`, so a tap just selects the row. `hideHelp()` clears
+  the hover tooltip too, so anything that slips through is dismissed by tapping past it.
+- **The tile size has a ceiling as well as a floor, and on a phone they meet.** "Largest that still
+  fits" is the wrong objective at phone width: a 393px screen takes six 50px columns or seven 44px
+  ones, both fit the height budget, and the search happily picks 50 — spending 398px of an 852px
+  screen on seven rows where seven 44px columns do the same tiles in six rows and 305px. Below 480px
+  of rack the tile is pinned to the 44px touch-target floor, and the rack panel's gutters are trimmed
+  to buy the width that seventh column needs.
 - **The rack is a fixed grid of square tracks, not flexible columns.** `1fr` columns plus
   `aspect-ratio` on the tile is circular — the tile's height depends on a column width that is itself
   flexible — and the engines disagree about it: Chromium sizes the auto row from the aspect ratio,

@@ -41,9 +41,22 @@ const MAX = 60;
 // pixel — so only displays meaningfully larger than that fill out.
 const GROW_MAX = 72;
 const GROW_MIN_WIDTH = 1100;
-// Fingertip size. Above Material's 48dp and Apple's 44pt, and the point below
-// which the 10px value in the tile's corner starts crowding the letter.
-const MIN = 48;
+// On a phone the tile is pinned to the floor rather than allowed to find its own
+// size, because "largest that still fits" is the wrong objective at this width.
+// A 393px phone fits six 50px columns or seven 44px ones; both fit the height
+// budget, so the search happily picks 50 and spends 398px of an 852px screen on
+// seven rows. Seven columns of 44px does the same forty tiles in six rows and
+// 275px. The tile is still a full touch target, and the ~120px goes back to the
+// board — which on a phone is the scarce thing.
+const NARROW_MAX = 44;
+const NARROW_WIDTH = 480;
+// Apple's 44pt touch target, which is the real floor: below this a tile stops
+// being reliably tappable. It sat at 48 first, on the theory that a slightly
+// roomier tile reads better — but on a phone those 4px are the difference
+// between five columns and six, and six columns is a whole row less scrolling.
+// Fitting more of the rack on screen turns out to matter more than the last few
+// points of tile size, so the floor goes back to the standard.
+const MIN = 44;
 // The gap between the rack and whatever sits under it, so the fitter does not
 // size the rack flush against the build bar.
 const SAFETY = 16;
@@ -207,7 +220,9 @@ export function fitRack() {
     const assembling = document.querySelector('.build-tile') !== null;
     if (assembling && lastFit && lastFit.w === width && lastFit.h === height) return;
 
-    let tile = chooseTile(width, height, count, gap, width >= GROW_MIN_WIDTH ? GROW_MAX : MAX);
+    const ceiling =
+      width < NARROW_WIDTH ? NARROW_MAX : width >= GROW_MIN_WIDTH ? GROW_MAX : MAX;
+    let tile = chooseTile(width, height, count, gap, ceiling);
 
     // Within one geometry, grow but never shrink. Fewer tiles may free a row and
     // let them grow — which is wanted — but nothing that happens during a turn

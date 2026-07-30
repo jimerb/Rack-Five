@@ -352,6 +352,10 @@ export function showHelp(key, anchor) {
 }
 
 export function hideHelp() {
+  // Clears the hover tooltip too. The app-level tap handler calls this, and a
+  // tooltip that a stray synthetic mouse event managed to open has to be
+  // dismissable by tapping past it like everything else.
+  if (state.hoverTip) set({ hoverTip: null });
   if (state.helpTip) set({ helpTip: null });
 }
 

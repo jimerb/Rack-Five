@@ -81,8 +81,16 @@ export function HelpDot({ topic, label }) {
  * Props to spread onto anything that should explain itself on hover.
  *
  * `item` is { title, body?, lines?: [[label, value]], note? }. Pass null to opt
- * out — callers often build the item conditionally. Focus and blur are wired
- * alongside the mouse so the same explanation is reachable from the keyboard.
+ * out — callers often build the item conditionally.
+ *
+ * Strictly a hover affordance, and it has to police that itself. A touch device
+ * synthesises `mouseenter` when you tap and then never sends `mouseleave`, and
+ * tapping a button focuses it, so both openers fired on a plain tap and nothing
+ * ever closed them. On the scorecard that put a fixed-position bubble over the
+ * very button the tap was aiming for — you could select a category and then not
+ * reach the control that scores it. So: the mouse opener requires a pointer that
+ * genuinely hovers, and the keyboard opener requires focus that came from the
+ * keyboard. A tap now does what a tap should, which is select the row.
  *
  * The tooltip renders at the app root with fixed positioning, which is what
  * makes it usable on the scorecard: those rows live inside a scroll container
@@ -94,9 +102,18 @@ export function tipProps(item) {
     const r = e.currentTarget.getBoundingClientRect();
     showTip(item, { x: r.left + r.width / 2, y: r.bottom + 8, top: r.top });
   };
+  const onMouseEnter = (e) => {
+    if (window.matchMedia('(hover: hover)').matches) open(e);
+  };
+  const onFocus = (e) => {
+    // :focus-visible is set for keyboard focus and not for a tap or a click,
+    // which is exactly the line we want to draw here.
+    const el = e.currentTarget;
+    if (el.matches && el.matches(':focus-visible')) open(e);
+  };
   return {
-    onMouseEnter: open,
-    onFocus: open,
+    onMouseEnter,
+    onFocus,
     onMouseLeave: hideTip,
     onBlur: hideTip
   };
