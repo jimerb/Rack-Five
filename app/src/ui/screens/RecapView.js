@@ -1,6 +1,6 @@
 import { html, cx } from '../html.js';
 import { CATEGORIES } from '../../engine/categories.js';
-import { categoryName } from '../../state/store.js';
+import { categoryName, go, goPlay } from '../../state/store.js';
 import { dictionaryMeta } from '../../engine/dictionary.js';
 import { formatDate } from './Home.js';
 
@@ -24,6 +24,25 @@ export function RecapView({ recap, entry = null, place = 0, boardLabel = 'Leader
   return html`
     <main class="screen">
       <div class="screen-col w-1000">
+        <header class="recap-topbar" aria-label="Finished run navigation">
+          <button class="recap-brand" type="button" onClick=${() => go('home')}>
+            Rack Five
+          </button>
+          <span class="recap-context">${historical ? 'Historical recap' : 'Finished run'}</span>
+          <nav class="recap-links" aria-label="Recap destinations">
+            <button class="recap-link" type="button" onClick=${goPlay}>Play</button>
+            <button
+              class=${cx('recap-link', historical && 'is-active')}
+              type="button"
+              onClick=${() => go('leaderboards')}
+              aria-current=${historical ? 'page' : undefined}
+            >
+              Leaderboards
+            </button>
+            <button class="recap-link" type="button" onClick=${() => go('settings')}>Settings</button>
+          </nav>
+        </header>
+
         ${onBack &&
         html`<button class="link-action" type="button" onClick=${onBack}>← Back to leaderboards</button>`}
 

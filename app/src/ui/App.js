@@ -64,6 +64,7 @@ export function App({ state }) {
 
   const inRun = !!(state.run && state.turn && !state.run.completedAt);
   const screen = state.screen;
+  const isRecap = screen === 'results' || screen === 'leaderboard-recap';
 
   const screens = {
     home: Home,
@@ -79,8 +80,8 @@ export function App({ state }) {
   const Screen = screens[screen] || Home;
 
   return html`
-    <div class="app" onClick=${() => hideHelp()}>
-      <nav class="nav">
+    <div class=${cx('app', isRecap && 'is-recap')} onClick=${() => hideHelp()}>
+      ${!isRecap && html`<nav class="nav">
         <button
           class="nav-brand"
           type="button"
@@ -129,7 +130,7 @@ export function App({ state }) {
           <span class="nav-theme-name">${THEME_NAMES[state.settings.theme]}</span>
           <button class="nav-theme-btn" type="button" onClick=${cycleTheme}>Switch theme</button>
         </div>
-      </nav>
+      </nav>`}
 
       <${Screen} state=${state} />
 

@@ -213,6 +213,58 @@
 
 /* ── Results ─────────────────────────────────────────────────────────────── */
 
+.recap-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  min-height: 50px;
+  padding: 7px 0 9px;
+  border-bottom: 1px solid var(--t-line);
+  background: var(--t-bg);
+}
+.recap-brand {
+  flex: none;
+  font-family: var(--t-fd);
+  font-weight: var(--t-fwd);
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--t-acc-hi);
+  white-space: nowrap;
+}
+.recap-context {
+  color: var(--t-dim);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.recap-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.recap-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border-radius: var(--t-btn-rad);
+  color: var(--t-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.recap-link:hover,
+.recap-link.is-active {
+  background: var(--t-acc-soft);
+  color: var(--t-acc-hi);
+}
+.recap-link:focus-visible { outline-offset: -2px; }
+
 .result-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 26px; }
 .final-score {
   font-family: var(--t-fd);
@@ -292,6 +344,18 @@
   color: var(--t-dim);
 }
 .turn-row .tw { font-family: var(--t-fd); letter-spacing: 0.06em; flex: 1 1 220px; min-width: 0; }
+
+@media (max-width: 700px) {
+  .recap-topbar {
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .recap-topbar::-webkit-scrollbar { display: none; }
+  .recap-context { display: none; }
+  .recap-links { margin-left: auto; flex: none; }
+}
 
 /* ── Leaderboards ────────────────────────────────────────────────────────── */
 
