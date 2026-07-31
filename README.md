@@ -100,7 +100,7 @@ scrolls internally (`overflow: auto`) inside a fixed-height app shell.
   then results are revealed together." These must look intentional, never broken, and must
   not start incomplete workflows.
 - **Footer line** — 12px `--t-dimmer`, top border, "Prototype build · ruleset phase1.0 ·
-  scores are stored locally".
+  shared leaderboard active" or the static-host fallback "scores are stored on this device".
 
 ### 2. Game setup
 
@@ -308,14 +308,16 @@ a leaderboard placement card, the completed 13-row scorecard, and a per-turn bre
 
 ### 7. Leaderboards
 
-Local only. Tabs Easy / Medium / Hard plus a disabled **Friends** tab labelled "Coming soon".
+Shared on Codex Sites and local-only on static hosts. Tabs Easy / Medium / Hard plus a disabled **Friends** tab labelled "Coming soon".
 Timing filter pills (All / Relaxed / Standard / Blitz). Rows show placing, score (26px display
 700 `--t-acc-hi`), timing · date · duration, a metadata line (card / bank / jumbo / upper /
 hints), the seed, a variant tag when the run used any (e.g. "Tile Value"), and a Standard or
 **Custom** badge. Custom runs never enter standard boards. The variant tag matters because all
 custom runs share one section — a tile-value run and a carry-over run are no more comparable to
 each other than either is to a standard run.
-Empty state shows rank chips and "No <Difficulty> runs yet". Tie-break order:
+Rows are keyboard and touch accessible and open the stored Results-style recap. Older entries without
+recap data show their available metadata and an explicit missing-detail message. Empty state shows
+rank chips and "No <Difficulty> runs yet". Tie-break order:
 score → fewer hints → shorter duration → earlier date.
 
 ### 8. How to Play
@@ -564,7 +566,7 @@ These are deliberate — the mockup proves the flow, not the shipping systems.
    timers, Word Bank method, the tile-value multipliers, and the experimental variant flags all
    reach `effectiveRuleset()`. Of the four variants, Tile Value Scoring and Blind Declaration
    change scoring today; Carry-Over and Power Letters are still flags only.
-3. **Leaderboards** are seeded with demo rows and are not persisted.
+3. **Leaderboards** persist completed entries locally and, on Codex Sites, in a shared D1-backed board. Static hosts fall back to a clearly labeled per-device board. Clicking an entry opens its stored recap.
 4. **Autosave, action log and playtest export** are stubbed. The data shapes are documented
    above and must be built for real.
 5. **Tutorial** (the scripted first turn) and the **playtest intent prompts** are specified in

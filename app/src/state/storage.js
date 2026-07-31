@@ -10,6 +10,7 @@ export const KEYS = {
   settings: PREFIX + 'settings',
   save: PREFIX + 'save',
   leaderboard: PREFIX + 'leaderboard',
+  leaderboardPending: PREFIX + 'leaderboard-pending',
   lab: PREFIX + 'lab',
   playtest: PREFIX + 'playtest'
 };

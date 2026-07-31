@@ -1,5 +1,5 @@
 import { html, cx } from '../html.js';
-import { setLbView, cap } from '../../state/store.js';
+import { setLbView, cap, openLeaderboardEntry } from '../../state/store.js';
 import { compareEntries } from './Results.js';
 import { formatDate } from './Home.js';
 
@@ -14,15 +14,19 @@ export function Leaderboards({ state }) {
 
   const standard = rows.filter((b) => !b.isCustom);
   const custom = rows.filter((b) => b.isCustom);
+  const shared = state.leaderboardSource === 'shared';
 
   return html`
     <main class="screen">
       <div class="screen-col w-960">
         <div>
-          <h1 class="page-title">Local leaderboards</h1>
+          <h1 class="page-title">${shared ? 'Shared' : 'Local'} leaderboards</h1>
           <p class="body-14" style="margin-top:6px;max-width:60ch">
             Difficulties are kept apart on purpose. An Easy player gets more completed patterns, more
             Word Bank chances and a better shot at the upper bonus, so the scores aren’t comparable.
+            ${shared
+              ? ' Scores submitted on this hosted build are visible to other players.'
+              : ' This static build keeps scores on this device because no shared API is available.'}
           </p>
         </div>
 
@@ -100,7 +104,13 @@ export function Leaderboards({ state }) {
 
 function row(b, place, state) {
   return html`
-    <div key=${b.id} class=${cx('lb-row', state.lastEntryId === b.id && 'is-latest')}>
+    <button
+      key=${b.id}
+      type="button"
+      class=${cx('lb-row', state.lastEntryId === b.id && 'is-latest')}
+      onClick=${() => openLeaderboardEntry(b)}
+      aria-label=${`Open recap for ${b.name || 'Anonymous'}, score ${b.score}`}
+    >
       <span class="lb-place">${place}</span>
       <span class="lb-score tnum">${b.score}</span>
       <span class="lb-mid">
@@ -118,6 +128,7 @@ function row(b, place, state) {
       ${b.isCustom
         ? html`<span class="badge-custom">Custom</span>`
         : html`<span class="badge-soon">Standard</span>`}
-    </div>
+      <span class="lb-open-hint">View recap&nbsp;→</span>
+    </button>
   `;
 }

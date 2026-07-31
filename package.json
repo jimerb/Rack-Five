@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-site.mjs",
-    "test": "node --test tests/sites-hosting.test.mjs"
+    "test": "node scripts/build-site.mjs && node --test tests/sites-hosting.test.mjs tests/leaderboard.test.mjs tests/worker-leaderboard.test.mjs"
   }
 }

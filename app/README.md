@@ -42,11 +42,12 @@ Two things a host has to get right:
   gzipped — worth enabling compression and a long `Cache-Control`, since it is fetched once per
   session at boot). The fonts are self-hosted `.woff2`.
 
-`/api/leaderboard` is **optional**. Where it does not exist the app notices the 404 once, stops
-asking, and the leaderboard becomes per-device — which is the expected state on a static host. Tell
-testers, or cross-device scores look broken. Where it *does* exist, note that this build has no
-authentication on it: any visitor can overwrite or clear the shared board, and the Gameplay Lab is
-equally open. Both belong behind a credential before the board carries anything worth keeping.
+`/api/leaderboard` is **optional**. Codex Sites provides it through the D1-backed Worker and the
+leaderboard is shared between players. GitHub Pages and other static hosts return 404, so the app
+falls back to a clearly labeled per-device board. New entries are sent as idempotent upserts, the
+shared store retains the newest 500 games, and the client retries entries created while offline.
+The endpoint intentionally has no authentication; validation, payload limits, the cap, and the
+absence of a global-clear action limit accidental damage, but moderation remains out of scope.
 
 ## What is real
 
@@ -67,8 +68,9 @@ Everything below is implemented, not mocked:
   Lab or How to Play never restarts a run — the nav item becomes "Resume game" and the clock stops
   while you are away. Reloading the browser restores the exact turn state.
 - **A replayable action log** per run, and **playtest export** as JSON plus a turn-level CSV.
-- **Local leaderboards**, separated by difficulty, filterable by timing, with Custom runs kept on
-  their own board.
+- **Shared leaderboards on Codex Sites**, with a local fallback on static hosts, separated by
+  difficulty, filterable by timing, with Custom runs kept on their own board. Each new row carries
+  a stored Results-style recap.
 - **The Gameplay Lab**, whose sliders feed the live engine.
 - **Sound effects**, synthesised with the Web Audio API — no binary assets — plus haptics.
 - **Three themes** (Feltwork, Midnight, Sandbar), persisted, with the source design systems' distinct

@@ -18,6 +18,7 @@ import { Setup } from './screens/Setup.js';
 import { Game } from './screens/Game.js';
 import { Results } from './screens/Results.js';
 import { Leaderboards } from './screens/Leaderboards.js';
+import { LeaderboardRecap } from './screens/LeaderboardRecap.js';
 import { HowToPlay } from './screens/HowToPlay.js';
 import { Settings } from './screens/Settings.js';
 import { Lab } from './screens/Lab.js';
@@ -37,6 +38,7 @@ const NAV = [
 function currentLabel(screen, inRun) {
   if (screen === 'game' || screen === 'setup') return inRun ? 'Resume game' : 'Play';
   if (screen === 'lab') return 'Settings';
+  if (screen === 'leaderboard-recap') return 'Leaderboards';
   const match = NAV.find((n) => n.key === screen);
   return match ? match.label : 'Menu';
 }
@@ -69,6 +71,7 @@ export function App({ state }) {
     game: Game,
     results: Results,
     leaderboards: Leaderboards,
+    'leaderboard-recap': LeaderboardRecap,
     howto: HowToPlay,
     settings: Settings,
     lab: Lab
@@ -96,10 +99,12 @@ export function App({ state }) {
                   'nav-item',
                   (n.key === 'play'
                     ? screen === 'setup' || screen === 'game'
-                    : screen === n.key || (n.key === 'settings' && screen === 'lab')) && 'is-active'
+                    : screen === n.key ||
+                      (n.key === 'leaderboards' && screen === 'leaderboard-recap') ||
+                      (n.key === 'settings' && screen === 'lab')) && 'is-active'
                 )}
                 onClick=${() => (n.key === 'play' ? goPlay() : go(n.key))}
-                aria-current=${screen === n.key ? 'page' : undefined}
+                aria-current=${screen === n.key || (n.key === 'leaderboards' && screen === 'leaderboard-recap') ? 'page' : undefined}
               >
                 ${n.key === 'play' && inRun ? 'Resume game' : n.label}
                 ${n.key === 'play' && inRun && html`<span class="live-dot" />`}

@@ -304,7 +304,12 @@
   border-radius: var(--t-rad-sm);
   background: var(--t-panel);
   border: 1px solid var(--t-line);
+  width: 100%;
+  text-align: left;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
 }
+.lb-row:hover { border-color: var(--t-line-2); transform: translateY(-1px); }
+.lb-row:focus-visible { border-color: var(--t-acc); }
 .lb-row.is-latest { border-color: var(--t-acc); background: var(--t-acc-soft); }
 .lb-place {
   font-family: var(--t-fd);
@@ -324,6 +329,7 @@
 .lb-mid { display: flex; flex-direction: column; gap: 1px; flex: 1 1 190px; min-width: 0; }
 .lb-meta { font-size: 11px; color: var(--t-dim); }
 .lb-seed { font-family: var(--t-fd); font-size: 12px; letter-spacing: 0.08em; color: var(--t-muted); }
+.lb-open-hint { font-size: 11px; color: var(--t-acc-hi); white-space: nowrap; }
 .lb-empty {
   display: flex;
   flex-direction: column;

@@ -29,7 +29,8 @@ import {
   dictionaryMeta
 } from '../engine/dictionary.js';
 import { KEYS, read, write, remove, download } from './storage.js';
-import { fetchRemote, pushRemote, mergeBoards } from './leaderboardSync.js';
+import { fetchRemote, pushRemote } from './leaderboardSync.js';
+import { buildLeaderboardRecap, mergeBoards } from './leaderboardData.js';
 import { play, configureAudio, unlockAudio } from '../audio/sfx.js';
 
 /* ── Store primitive ─────────────────────────────────────────────────────── */
@@ -105,6 +106,8 @@ export function initStore() {
     hoverTip: null,
     lbView: { difficulty: 'easy', timing: 'all' },
     leaderboard,
+    leaderboardSource: 'checking',
+    selectedLeaderboardEntry: null,
     lastEntryId: null,
     pendingEntry: null,
     nameDraft: '',
@@ -284,7 +287,16 @@ export function go(screen) {
   if (screen === 'game' && state.screen !== 'game' && state.turn) {
     logAction('resumed', { secondsLeft: state.turn.secondsLeft });
   }
-  set({ screen, helpTip: null, hoverTip: null });
+  set({ screen, selectedLeaderboardEntry: screen === 'leaderboard-recap' ? state.selectedLeaderboardEntry : null, helpTip: null, hoverTip: null });
+}
+
+export function openLeaderboardEntry(entry) {
+  if (!entry) return;
+  set({ screen: 'leaderboard-recap', selectedLeaderboardEntry: entry, helpTip: null, hoverTip: null });
+}
+
+export function closeLeaderboardRecap() {
+  set({ screen: 'leaderboards', selectedLeaderboardEntry: null, helpTip: null, hoverTip: null });
 }
 
 export function goPlay() {
@@ -488,7 +500,7 @@ export function startRun(options = {}) {
   const dictMeta = dictionaryMeta(state.settings.dictionaryId);
 
   const run = {
-    runId: 'r' + Date.now().toString(36),
+    runId: newRunId(),
     seed,
     difficulty,
     budget,
@@ -1222,12 +1234,13 @@ function recordLeaderboardEntry(run, t, name) {
     isCustom: !!run.isCustom,
     // Custom runs share one board, so say which rules were in play — a tile-value
     // run and a carry-over run are not comparable to each other either.
-    variantTag: variantTag(run.ruleset.experimentalVariants)
+    variantTag: variantTag(run.ruleset.experimentalVariants),
+    recap: buildLeaderboardRecap(run, t, player)
   };
   const leaderboard = mergeBoards(state.leaderboard, [entry]);
   set({ leaderboard });
   write(KEYS.leaderboard, leaderboard);
-  pushRemote(leaderboard);
+  queueLeaderboardUpload(entry);
   return entry;
 }
 
@@ -1435,20 +1448,60 @@ export function playAnother() {
 export function clearLeaderboard() {
   set({ leaderboard: [] });
   write(KEYS.leaderboard, []);
-  pushRemote([]);
+  write(KEYS.leaderboardPending, []);
   toast('Leaderboard cleared.');
 }
 
-/** Pull the server's copy, union it with what this browser has, push the result back. */
+/** Pull the server's copy, merge legacy local rows, and flush the upload queue. */
 function syncLeaderboard() {
   fetchRemote()
     .then((remote) => {
-      const merged = mergeBoards(state.leaderboard, remote);
-      set({ leaderboard: merged });
+      const local = state.leaderboard;
+      const remoteIds = new Set(remote.map((entry) => entry.id));
+      const localOnly = local.filter((entry) => !remoteIds.has(entry.id));
+      const merged = mergeBoards(local, remote);
+      set({ leaderboard: merged, leaderboardSource: 'shared' });
       write(KEYS.leaderboard, merged);
-      if (merged.length !== remote.length) pushRemote(merged);
+      if (localOnly.length) {
+        const pending = mergeBoards(read(KEYS.leaderboardPending) || [], localOnly);
+        write(KEYS.leaderboardPending, pending);
+      }
+      flushLeaderboardQueue();
     })
-    .catch(() => {});
+    .catch(() => set({ leaderboardSource: 'local' }));
+}
+
+function queueLeaderboardUpload(entry) {
+  const pending = mergeBoards(read(KEYS.leaderboardPending) || [], [entry]);
+  write(KEYS.leaderboardPending, pending);
+  flushLeaderboardQueue();
+}
+
+async function flushLeaderboardQueue() {
+  const pending = read(KEYS.leaderboardPending) || [];
+  if (!pending.length) return;
+  const accepted = new Set();
+  try {
+    for (let i = 0; i < pending.length; i += 100) {
+      const batch = pending.slice(i, i + 100);
+      const result = await pushRemote(batch);
+      for (const id of result.acceptedIds || []) accepted.add(id);
+    }
+    write(KEYS.leaderboardPending, pending.filter((entry) => !accepted.has(entry.id)));
+  } catch {
+    // Keep the queue intact so a later boot or score submission can retry it.
+  }
+}
+
+function newRunId() {
+  try {
+    if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+      return 'r' + globalThis.crypto.randomUUID();
+    }
+  } catch {
+    // Older browsers use the fallback below; it is not part of gameplay RNG.
+  }
+  return 'r' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
 }
 
 export function setLbView(patch) {

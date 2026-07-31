@@ -1,9 +1,8 @@
-// Server-side leaderboard persistence.
-//
-// localStorage alone is per-browser and vanishes with a profile wipe, so the
-// board is mirrored to a JSON file behind /api/leaderboard. The file is capped
-// server-side, which is why no database is needed. If the endpoint is missing
-// (opened from disk, or a static host), everything still works locally.
+// Shared leaderboard persistence. localStorage remains the optimistic cache and
+// fallback for GitHub Pages or any other static host; Codex Sites serves the
+// authoritative copy from /api/leaderboard.
+
+import { mergeBoards } from './leaderboardData.js';
 
 // Relative, not root-absolute: hosting often puts the app under a path rather
 // than at a domain root, and './api/…' resolves against wherever index.html
@@ -11,12 +10,16 @@
 const ENDPOINT = './api/leaderboard';
 
 // A static host has no endpoint at all. That is a supported way to run — the
-// board is simply per-device — so the first refusal is remembered and no further
-// requests are made, rather than every leaderboard visit retrying a 404.
+// board is simply per-device — so a definitive 404/405/501 is remembered and no
+// further requests are made during this session.
 let unavailable = false;
 
 export function remoteAvailable() {
   return !unavailable;
+}
+
+export function resetRemoteStatus() {
+  unavailable = false;
 }
 
 export async function fetchRemote() {
@@ -25,7 +28,6 @@ export async function fetchRemote() {
   try {
     res = await fetch(ENDPOINT, { headers: { Accept: 'application/json' } });
   } catch (err) {
-    unavailable = true;
     throw err;
   }
   if (!res.ok) {
@@ -40,25 +42,24 @@ export async function fetchRemote() {
     throw new Error('leaderboard endpoint returned ' + (type || 'no content type'));
   }
   const data = await res.json();
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data) ? mergeBoards(data, []) : [];
 }
 
 export function pushRemote(entries) {
-  if (unavailable) return Promise.resolve();
+  const batch = mergeBoards(entries, []);
+  if (unavailable || !batch.length) return Promise.resolve({ acceptedIds: [] });
   return fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entries)
-  }).catch(() => {});
+    body: JSON.stringify({ entries: batch })
+  }).then(async (res) => {
+    if (!res.ok) {
+      if (res.status === 404 || res.status === 405 || res.status === 501) unavailable = true;
+      throw new Error('leaderboard push failed: ' + res.status);
+    }
+    const data = await res.json().catch(() => ({}));
+    return { acceptedIds: Array.isArray(data.acceptedIds) ? data.acceptedIds : batch.map((x) => x.id) };
+  });
 }
 
-/** Union by entry id, newest run kept, sorted newest-first so the cap trims oldest. */
-export function mergeBoards(a, b) {
-  const byId = new Map();
-  for (const entry of a.concat(b)) {
-    if (!entry || !entry.id) continue;
-    // Entries recorded before the leaderboard asked for a name belong to Terry B.
-    byId.set(entry.id, entry.name ? entry : { ...entry, name: 'Terry B' });
-  }
-  return [...byId.values()].sort((x, y) => y.date - x.date);
-}
+export { mergeBoards } from './leaderboardData.js';

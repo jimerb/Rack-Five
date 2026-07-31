@@ -306,7 +306,11 @@ export function Settings({ state }) {
         </section>
 
         <p class="foot-note">
-          Everything on this screen is stored locally in this browser. Nothing leaves the device.
+          Preferences and saved runs stay in this browser. ${
+            state.leaderboardSource === 'shared'
+              ? 'Submitted leaderboard scores are also shared with other players on this hosted build.'
+              : 'Leaderboard scores remain on this device when no shared API is available.'
+          }
         </p>
       </div>
     </main>

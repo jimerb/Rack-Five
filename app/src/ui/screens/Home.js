@@ -126,7 +126,7 @@ export function Home({ state }) {
         </section>
 
         <div class="foot-note">
-          Prototype build · ruleset ${ruleset.rulesetVersion} · scores are stored locally
+          Prototype build · ruleset ${ruleset.rulesetVersion} · ${state.leaderboardSource === 'shared' ? 'shared leaderboard is active' : 'scores are stored on this device'}
         </div>
       </div>
     </main>
