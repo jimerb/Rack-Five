@@ -1,5 +1,8 @@
 # Handoff: Rack Five — Solo Arcade (Phase 1)
 
+<img width="3540" height="1620" alt="image" src="https://github.com/user-attachments/assets/6cff1f72-b322-49d4-9167-e56aaca3bdcb" />
+
+
 ## Overview
 
 Rack Five is a word game built on the structure of Yahtzee. Instead of rolling five dice,
